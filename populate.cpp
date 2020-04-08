@@ -33,7 +33,7 @@ int main()
         }
 
         // Create SQL statements for creating the tables
-        string tables = "DROP TABLE Customers CASCADE;"
+        string tables = "DROP TABLE IF EXISTS Customers CASCADE;"
                         "CREATE TABLE Customers("  
                             "CID INTEGER,"
                             "Email VARCHAR(50),"
@@ -44,7 +44,7 @@ int main()
                             "DOB DATE,"
                             "PRIMARY KEY(CID));"
 
-                        "DROP TABLE Movies CASCADE;"
+                        "DROP TABLE IF EXISTS Movies CASCADE;"
                         "CREATE TABLE Movies("
                             "MID INTEGER,"
                             "Title VARCHAR(50),"
@@ -56,7 +56,7 @@ int main()
                             "Des VARCHAR(600),"
                             "PRIMARY KEY(MID));"
 
-                        "DROP TABLE Orders CASCADE;"
+                        "DROP TABLE IF EXISTS Orders CASCADE;"
                         "CREATE TABLE Orders("
                             "OID INTEGER,"
                             "CID INTEGER,"
@@ -67,7 +67,7 @@ int main()
                             "PRIMARY KEY(OID),"
                             "CONSTRAINT order_fk FOREIGN KEY(CID) REFERENCES Customers);"
 
-                        "DROP TABLE Cart CASCADE;"
+                        "DROP TABLE IF EXISTS Cart CASCADE;"
                         "CREATE TABLE Cart("
                             "CID INTEGER,"
                             "MID INTEGER,"
