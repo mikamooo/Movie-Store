@@ -54,15 +54,7 @@ int main()
                 customer.loginPage(connect);
                 break;
             }
-            default:
-            {
-                cout << "Please select a valid option." << endl
-                     << "1) Customer Login" << endl
-                     << "2) Create an Account" << endl
-                     << "3) Browse movies" << endl
-                     << "4) Admin Login" << endl
-                     << "5) Exit" << endl;
-            }
+           
         }
 
         C.disconnect();
