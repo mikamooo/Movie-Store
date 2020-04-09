@@ -50,7 +50,7 @@ int main()
             case 1:
             {
                 User customer;
-                customer.loginPage(connect);
+                customer.loginPage(C);
                 break;
             }
             case 3:

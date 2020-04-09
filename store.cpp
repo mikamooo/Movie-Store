@@ -1,8 +1,7 @@
 #include "store.hpp"
 
-void User::loginPage(string connect)
+void User::loginPage(connection& C)
 {
-    connection C(connect); // Connect to the database
     string email, pass, sql;
     int tries = 2; // Only allow 2 more log in attempts after initial attempt
     bool attempts = false;
@@ -73,15 +72,13 @@ void User::loginPage(string connect)
     {
         cout << "You have successfully logged in!" << endl;
         C.disconnect();
-        userMenu(connect);
+        userMenu(C);
     }
 
 }
 
-void User::userMenu(string connect)
+void User::userMenu(connection& C)
 {
-    connection C(connect);
-
     int option;
     cout << "***********************************************************************" << endl
          << "*                    Welcome back movie lover!                        *" << endl
