@@ -4,7 +4,7 @@
 
 using namespace std;
 using namespace pqxx;
-
+void displayAllMovies(connection &C);
 int main()
 {
     string db, user, pass, connect;
@@ -22,7 +22,6 @@ int main()
     try // Try connecting to the database
     {
         connection C(connect);
-
         if (C.is_open())
         {
             cout << "Opened database successfully: " << C.dbname() << endl;
@@ -45,7 +44,7 @@ int main()
              << "4) Admin Login" << endl
              << "5) Exit" << endl;
         cin >> option;
-
+   
         switch(option)
         {
             case 1:
@@ -54,8 +53,16 @@ int main()
                 customer.loginPage(connect);
                 break;
             }
+            case 3:
+            {
+                displayAllMovies(C);
+                break;
+            }
+            default:
+                break;
            
         }
+    
 
         C.disconnect();
     }
@@ -66,4 +73,18 @@ int main()
     }
 
     return 0;
+}
+
+void displayAllMovies(connection &C)
+{
+string sql = "SELECT * FROM movies;";   
+nontransaction N1(C); // Create a non-transactional object
+result R(N1.exec(sql)); // Get the result of the query
+int i = 1;
+for(auto row : R)
+{
+    cout << i<< ". " << row["title"] << endl;
+    i++;
+}
+return;
 }
