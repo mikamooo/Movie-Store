@@ -31,7 +31,7 @@ int main()
             cout << "Can't open database" << endl;
             return 1;
         }
-
+    
         // Create SQL statements for creating the tables
         string tables = "DROP TABLE IF EXISTS Customers CASCADE;"
                         "CREATE TABLE Customers("  
@@ -74,7 +74,9 @@ int main()
                             "Qty INTEGER,"
                             "CONSTRAINT cart_pk PRIMARY KEY(CID, MID),"
                             "CONSTRAINT cart_fk1 FOREIGN KEY(CID) REFERENCES Customers,"
-                            "CONSTRAINT cart_fk2 FOREIGN KEY(MID) REFERENCES Movies);";
+                            "CONSTRAINT cart_fk2 FOREIGN KEY(MID) REFERENCES Movies);"
+                            
+                        "CREATE USER guest WITH PASSWORD 'password';";
 
         work W1(C); // Create a transactional object
         W1.exec(tables);
