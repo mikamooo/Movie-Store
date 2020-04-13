@@ -9,8 +9,8 @@ using namespace pqxx;
 class Main
 {
     public:
-        void welcomePage();
         void searchPage();
+        void createAccount();
 };
 
 class User
@@ -22,6 +22,7 @@ class User
         void addToCart();
         void checkOut();
         void viewOrders();
+        void updateAccountInfo();
 };
 
 class Admin
