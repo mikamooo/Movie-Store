@@ -6,7 +6,7 @@ void User::loginPage(string db)
     connection C(connect);
 
     string email, pass, sql;
-    int tries = 2; // Only allow 2 more log in attempts after initial attempt
+    int tries = 2, cid; // Only allow 2 more log in attempts after initial attempt
     bool attempts = false;
 
     cout << "***********************************************************************" << endl
@@ -61,7 +61,11 @@ void User::loginPage(string db)
             }
         }
         else
+        {
+            result::const_iterator c = R.begin();
+            cid = c[0].as<int>();
             break;
+        }
 
     } while(!attempts);
 
@@ -74,7 +78,7 @@ void User::loginPage(string db)
     else // Or let the user know that they have successfully logged in.
     {
         cout << "You have successfully logged in!" << endl;
-        C.disconnect();
+        CID = cid;
         userMenu(C);
     }
 
@@ -100,6 +104,7 @@ void User::userMenu(connection& C)
         case 1:
             break;
         case 2:
+            viewOrders(C);
             break;
         case 3:
             break;
@@ -111,3 +116,27 @@ void User::userMenu(connection& C)
 
 }
 
+void User::viewOrders(connection& C)
+{
+    cout << "***********************************************************************" << endl
+         << "*                                                                     *" << endl
+         << "*                             Your Orders                             *" << endl
+         << "*                                                                     *" << endl
+         << "***********************************************************************" << endl << endl;
+
+    string sql = "SELECT OID, Received, Shipped, Address, Status FROM Orders WHERE CID = " 
+                 + to_string(CID) + " ORDER BY Received;";
+        
+    nontransaction N1(C); // Create a non-transactional object
+    result R(N1.exec(sql)); // Get the result of the query
+
+    for (result::const_iterator c = R.begin(); c != R.end(); c++)
+    {
+        cout << "Order Number: " << c[0].as<string>() << endl;
+        cout << "Date Received: " << c[1].as<string>() << endl;
+        cout << "Date Shipped: " << c[2].as<string>() << endl;
+        cout << "Shipping Address: " << c[3].as<string>() << endl;
+        cout << "Order Status: " << c[4].as<string>() << endl << endl;
+    } 
+    
+}

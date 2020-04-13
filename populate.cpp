@@ -76,16 +76,16 @@ int main()
                             "CONSTRAINT cart_fk1 FOREIGN KEY(CID) REFERENCES Customers,"
                             "CONSTRAINT cart_fk2 FOREIGN KEY(MID) REFERENCES Movies);"
                             
-                        "DROP USER IF EXISTS guest;"
-                        "CREATE USER guest WITH PASSWORD 'password';"
-                        "GRANT SELECT ON TABLE Movies TO guest;"
+                        "DROP USER IF EXISTS movie_guest;"
+                        "CREATE USER movie_guest WITH PASSWORD 'password';"
+                        "GRANT SELECT ON TABLE Movies TO movie_guest;"
                         
-                        "DROP USER IF EXISTS customer;"
-                        "CREATE USER customer WITH PASSWORD 'password';"
-                        "GRANT SELECT ON TABLE Movies TO customer;"
-                        "GRANT SELECT ON TABLE Orders TO customer;"
-                        "GRANT SELECT, UPDATE ON TABLE Customers TO customer;"
-                        "GRANT SELECT, INSERT, UPDATE ON TABLE Cart TO customer;";
+                        "DROP USER IF EXISTS movie_customer;"
+                        "CREATE USER movie_customer WITH PASSWORD 'password';"
+                        "GRANT SELECT ON TABLE Movies TO movie_customer;"
+                        "GRANT SELECT ON TABLE Orders TO movie_customer;"
+                        "GRANT SELECT, UPDATE ON TABLE Customers TO movie_customer;"
+                        "GRANT SELECT, INSERT, UPDATE ON TABLE Cart TO movie_customer;";
 
         work W1(C); // Create a transactional object
         W1.exec(tables);

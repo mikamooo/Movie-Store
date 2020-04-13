@@ -15,14 +15,16 @@ class Main
 
 class User
 {
+    private:
+        int CID;
     public:
         void loginPage(string);
         void userMenu(connection&);
         void userSearch();
         void addToCart();
         void checkOut();
-        void viewOrders();
-        void updateAccountInfo();
+        void viewOrders(connection&);
+        void updateAccountInfo(connection&);
 };
 
 class Admin
