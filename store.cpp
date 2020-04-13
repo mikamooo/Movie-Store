@@ -2,11 +2,11 @@
 
 void User::loginPage(string db)
 {
-    string connect = "dbname = " + db + " user = customer password = password hostaddr = 127.0.0.1 port = 5432";
+    string connect = "dbname = " + db + " user = movie_customer password = password hostaddr = 127.0.0.1 port = 5432";
     connection C(connect);
 
     string email, pass, sql;
-    int tries = 2; // Only allow 2 more log in attempts after initial attempt
+    int tries = 2, cid; // Only allow 2 more log in attempts after initial attempt
     bool attempts = false;
 
     cout << "***********************************************************************" << endl
@@ -21,6 +21,7 @@ void User::loginPage(string db)
 
     do // Check if the user is in the database
     {
+        // Create SQL statement to get the tuple with the given email and password
         sql = "SELECT * FROM Customers WHERE Email = '" + email + "' AND Password = '" + pass + "';";
         
         nontransaction N1(C); // Create a non-transactional object
@@ -34,31 +35,31 @@ void User::loginPage(string db)
                 break;
             }    
                 
-            int option; // Prompt users to retry, create an account, or exit
+            int option; // Prompt users to retry, create an account, return to main menu, or exit
             cout << "Incorrect email or password." << endl
                  << "1) Try again" << endl
-                 << "2) Create an account" << endl
-                 << "3) Exit" << endl;
+                 << "2) Create an account" 
+                 << "3) Return to main menu" << endl;
             cin >> option;
 
-            if (option == 1)
+            switch(option) // Respond to the chosen option
             {
-                cout << "Email: ";
-                cin >> email;
-                cout << "Password: ";
-                cin >> pass;
-                tries--;
+                case 1:
+                {
+                    cout << "Email: ";
+                    cin >> email;
+                    cout << "Password: ";
+                    cin >> pass;
+                    tries--;
+                    break;
+                }
+                case 2:
+                    // Call a Main function
+                    return; 
+                case 3:
+                    return; 
             }
-            else if (option == 2)
-            {
-                // Call a Main function
-                return; 
-            }
-            else if (option == 3)
-            {
-                C.disconnect();
-                return;
-            }
+
         }
         else
             {cid = R.at(0)["cid"].as<int>();
@@ -75,8 +76,6 @@ void User::loginPage(string db)
     else // Or let the user know that they have successfully logged in.
     {
         cout << "You have successfully logged in!" << endl;
-        //cid = R.at
-        C.disconnect();
         userMenu(C);
     }
 
@@ -106,6 +105,7 @@ void User::userMenu(connection& C)
             function.addToCart(C,cid);
             break;}
         case 2:
+            viewOrders(C);
             break;
         case 3:{
             functions function;
@@ -115,8 +115,58 @@ void User::userMenu(connection& C)
             break;
         case 5:
             break;
+        default:
+            option =-1;
+                    break;
     }
     }while(option!=-1);
 
 }
 
+void User::viewOrders(connection& C)
+{
+    int option;
+    cout << "***********************************************************************" << endl
+         << "*                                                                     *" << endl
+         << "*                             Your Orders                             *" << endl
+         << "*                                                                     *" << endl
+         << "***********************************************************************" << endl << endl;
+
+    // Create SQL statement to get the customers orders
+    string sql = "SELECT OID, Received, Shipped, Address, Status FROM Orders WHERE CID = " 
+                 + to_string(cid) + " ORDER BY Received;";
+        
+    nontransaction N1(C); // Create a non-transactional object
+    result R(N1.exec(sql)); // Get the result of the query
+
+    for (result::const_iterator c = R.begin(); c != R.end(); c++) // Print the results
+    {
+        cout << "Order Number: " << c[0].as<string>() << endl;
+        cout << "Date Received: " << c[1].as<string>() << endl;
+        cout << "Date Shipped: " << c[2].as<string>() << endl;
+        cout << "Shipping Address: " << c[3].as<string>() << endl;
+        cout << "Order Status: " << c[4].as<string>() << endl << endl;
+    } 
+
+    do
+    {
+        cout << "1) Return to user menu" << endl; // Prompt the user to return to the user menu
+        cin >> option;
+
+        switch(option)
+        {
+            case 1:
+                userMenu(C);
+                break;
+            default:
+                cout << "Please select a valid option." << endl;
+                break;
+        }
+
+    } while (option != 1);
+}
+
+void updateAccountInfo(connection&)
+{
+    
+}

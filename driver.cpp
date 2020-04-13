@@ -13,7 +13,7 @@ int main()
     cout << "Enter the name of the database: "; 
     cin >> db;
 
-    connect = "dbname = " + db + " user = guest password = password hostaddr = 127.0.0.1 port = 5432";
+    connect = "dbname = " + db + " user = movie_guest password = password hostaddr = 127.0.0.1 port = 5432";
 
     try // Try connecting to the database
     {

@@ -22,8 +22,10 @@ class User
         void userSearch();
         void addToCart();
         void checkOut();
-        void viewOrders();
-        void updateAccountInfo();
+        void viewCart();
+        void viewOrders(connection&);
+        void viewAccount(connection&);
+        void updateAccountInfo(connection&);
 };
 
 class Admin
