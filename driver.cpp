@@ -53,7 +53,7 @@ int main()
                 }
                 case 3:
                 {
-                    displayAllMovies(C);
+                    browseMovies(C);
                     break;
                 }
                 default:

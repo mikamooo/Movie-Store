@@ -6,7 +6,10 @@ using namespace std;
 using namespace pqxx;
 
 
+void browseMovies(connection &C);
 void displayAllMovies(connection &C);
+void displayAllMoviesByGenre(connection &C, string genre);
+void genrePrompt(connection &C);
 
 
 #endif
