@@ -49,11 +49,12 @@ int main()
                 {
                     User customer;
                     customer.loginPage(db);
+                    option =-1;
                     break;
                 }
                 case 3:
-                {
-                    browseMovies(C);
+                {functions function;
+                    function.browseMovies(C);
                     break;
                 }
                 default:

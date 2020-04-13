@@ -61,7 +61,8 @@ void User::loginPage(string db)
             }
         }
         else
-            break;
+            {cid = R.at(0)["cid"].as<int>();
+            break;}
 
     } while(!attempts);
 
@@ -74,6 +75,7 @@ void User::loginPage(string db)
     else // Or let the user know that they have successfully logged in.
     {
         cout << "You have successfully logged in!" << endl;
+        //cid = R.at
         C.disconnect();
         userMenu(C);
     }
@@ -83,6 +85,7 @@ void User::loginPage(string db)
 void User::userMenu(connection& C)
 {
     int option;
+    do{
     cout << "***********************************************************************" << endl
          << "*                    Welcome back movie lover!                        *" << endl
          << "*                                                                     *" << endl
@@ -94,20 +97,26 @@ void User::userMenu(connection& C)
          << "4) View account info" << endl
          << "5) Log Out" << endl;
     cin >> option;
-
+    
     switch(option)
     {
-        case 1:
-            break;
+        case 1:{
+            functions function;
+            function.browseMovies(C);
+            function.addToCart(C,cid);
+            break;}
         case 2:
             break;
-        case 3:
-            break;
+        case 3:{
+            functions function;
+            function.viewCart(C, cid);
+            break;}
         case 4:
             break;
         case 5:
             break;
     }
+    }while(option!=-1);
 
 }
 

@@ -1,9 +1,16 @@
 
 #include "functions.hpp"
 
+functions::functions()
+{
+res = nullptr;
+}
+functions::~functions()
+{
+delete res;
+}
 
-
-void browseMovies(connection &C)
+void functions::browseMovies(connection &C)
 {
 int option;
 cout            << "***********************************************************************" << endl
@@ -35,35 +42,48 @@ cout            << "************************************************************
 return;
 }
 
-void displayAllMovies(connection &C)
+void functions::displayAllMovies(connection &C)
 {
 string sql = "SELECT * FROM movies;";   
 nontransaction N1(C); // Create a non-transactional object
-result R(N1.exec(sql)); // Get the result of the query
+
+result *R = new result(N1.exec(sql)); // Get the result of the query
 int i = 1;
-for(auto row : R)
+for(auto row : *R)
 {
     cout << i<< ". " << row["title"] << endl;
     i++;
 }
+cout <<endl;
+if(res!=nullptr)//if result is not null, delete current contents.
+    {
+    delete res;
+    }
+res = R;
 return;
 }
 
-void displayAllMoviesByGenre(connection &C, string genre)
+void functions::displayAllMoviesByGenre(connection &C, string genre)
 {
 string sql = "SELECT * FROM movies WHERE Genre ='" +genre +"';";   
 nontransaction N1(C); // Create a non-transactional object
-result R(N1.exec(sql)); // Get the result of the query
+result *R = new result(N1.exec(sql)); // Get the result of the query
 int i = 1;
-for(auto row : R)
+for(auto row : *R)
 {
     cout << i<< ". " << row["title"] << endl;
     i++;
 }
+cout <<endl;
+if(res!=nullptr)//if result is not null, delete current contents.
+    {
+    delete res;
+    }
+res = R;
 return;
 }
 
-void genrePrompt(connection &C)
+void functions::genrePrompt(connection &C)
 {
 int option;
 cout            << "***********************************************************************" << endl
@@ -124,11 +144,59 @@ cout            << "************************************************************
             break;
         }
         option =-1;
-             break;
-           
+             break;      
     }
+}
 
+void functions::addToCart(connection &C, int cid)
+{
+int option;
+cout <<"Would you like to add to cart?" <<endl
+        <<"1) Yes"<<endl
+        <<"2) No"<<endl;
 
+ cin >> option;
+    switch(option)
+    {
+        case 1:
+        {
+            cout << "Enter the number of the movie you would like to add to your cart!" <<endl;
+            cin >> option;
+            if(res ==nullptr || option <1 || option >res->size())//if there is no
+                    {cout << "Sorry! We experienced some technical difficulties"<<endl;
+                    return;
+                    }
+            string insert = "INSERT INTO CART(CID, mid, qty)"
+                        "VALUES ("+to_string(cid) +',' +res->at(option-1)["mid"].as<string>()+",1)"
+                        "ON CONFLICT ON CONSTRAINT cart_pk DO UPDATE SET qty = CART.qty + 1;";
+            work W(C); // Create a transactional object
+            W.exec(insert);
+            W.commit();
+            break;
+        }
+        case 2:
+        break;
+    }
+    return;
+}
 
+void functions::viewCart(connection &C, int CID){
+string sql = "SELECT title, qty2 FROM movies NATURAL JOIN (SELECT cid, mid, qty as qty2 FROM cart) as cart2 WHERE cid = " +to_string(CID)+";";   
+nontransaction N1(C); // Create a non-transactional object
+
+result *R = new result(N1.exec(sql)); // Get the result of the query
+int i = 1;
+for(auto row : *R)
+{
+    cout << i<< ". " << row["title"] << "\t" << row["qty2"]<< endl;
+    i++;
+}
+cout <<endl;
+if(res!=nullptr)//if result is not null, delete current contents.
+    {
+    delete res;
+    }
+res = R;
+return;
 
 }
