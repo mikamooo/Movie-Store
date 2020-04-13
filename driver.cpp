@@ -1,10 +1,10 @@
 #include <iostream>
 #include <pqxx/pqxx>
 #include "store.hpp"
+#include "functions.hpp"
 
 using namespace std;
 using namespace pqxx;
-void displayAllMovies(connection &C);
 int main()
 {
     string db, connect;
@@ -76,16 +76,3 @@ int main()
     return 0;
 }
 
-void displayAllMovies(connection &C)
-{
-string sql = "SELECT * FROM movies;";   
-nontransaction N1(C); // Create a non-transactional object
-result R(N1.exec(sql)); // Get the result of the query
-int i = 1;
-for(auto row : R)
-{
-    cout << i<< ". " << row["title"] << endl;
-    i++;
-}
-return;
-}
