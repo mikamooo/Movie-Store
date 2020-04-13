@@ -2,7 +2,7 @@
 
 void User::loginPage(string db)
 {
-    string connect = "dbname = " + db + " user = customer password = password hostaddr = 127.0.0.1 port = 5432";
+    string connect = "dbname = " + db + " user = movie_customer password = password hostaddr = 127.0.0.1 port = 5432";
     connection C(connect);
 
     string email, pass, sql;
@@ -112,12 +112,16 @@ void User::userMenu(connection& C)
             break;
         case 5:
             break;
+        default:
+            option =-1;
+                    break;
     }
 
 }
 
 void User::viewOrders(connection& C)
 {
+    int option;
     cout << "***********************************************************************" << endl
          << "*                                                                     *" << endl
          << "*                             Your Orders                             *" << endl
@@ -138,5 +142,21 @@ void User::viewOrders(connection& C)
         cout << "Shipping Address: " << c[3].as<string>() << endl;
         cout << "Order Status: " << c[4].as<string>() << endl << endl;
     } 
-    
+
+    do
+    {
+        cout << "1) Back to user menu" << endl;
+        cin >> option;
+
+        switch(option)
+        {
+            case 1:
+                userMenu(C);
+                break;
+            default:
+                cout << "Please select a valid option." << endl;
+                break;
+        }
+
+    } while (option != 1);
 }
