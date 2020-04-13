@@ -29,35 +29,40 @@ int main()
         }
 
         int option;
-        cout << "***********************************************************************" << endl
-             << "*                  Welcome to the Movie Store!                        *" << endl
-             << "*                                                                     *" << endl
-             << "*                    Please select an option.                         *" << endl
-             << "***********************************************************************" << endl << endl
-             << "1) Customer Login" << endl
-             << "2) Create an Account" << endl
-             << "3) Browse for movies" << endl
-             << "4) Admin Login" << endl
-             << "5) Exit" << endl;
-        cin >> option;
-   
-        switch(option)
-        {
-            case 1:
+        do{
+            cout << "***********************************************************************" << endl
+                 << "*                  Welcome to the Movie Store!                        *" << endl
+                << "*                                                                     *" << endl
+                 << "*                    Please select an option.                         *" << endl
+                 << "***********************************************************************" << endl << endl
+                 << "1) Customer Login" << endl
+                 << "2) Create an Account" << endl
+                 << "3) Browse for movies" << endl
+                 << "4) Admin Login" << endl
+                 << "5) Exit" << endl;
+        
+        
+            cin >> option;
+            switch(option)
             {
-                User customer;
-                customer.loginPage(db);
-                break;
-            }
-            case 3:
-            {
-                displayAllMovies(C);
-                break;
-            }
-            default:
-                break;
+                case 1:
+                {
+                    User customer;
+                    customer.loginPage(db);
+                    break;
+                }
+                case 3:
+                {
+                    displayAllMovies(C);
+                    break;
+                }
+                default:
+                option =-1;
+                    break;
            
-        }
+            }
+        
+        }while(option!=-1);
     
 
         C.disconnect();
