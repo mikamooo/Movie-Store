@@ -7,17 +7,13 @@ using namespace pqxx;
 void displayAllMovies(connection &C);
 int main()
 {
-    string db, user, pass, connect;
+    string db, connect;
 
     // Get the info for the database to connect to
     cout << "Enter the name of the database: "; 
     cin >> db;
-    cout << "Enter the username: ";
-    cin >> user;
-    cout << "Enter the password: "; 
-    cin >> pass;
 
-    connect = "dbname = " + db + " user = " + user + " password = " + pass + " hostaddr = 127.0.0.1 port = 5432";
+    connect = "dbname = " + db + " user = guest password = password hostaddr = 127.0.0.1 port = 5432";
 
     try // Try connecting to the database
     {
@@ -50,7 +46,7 @@ int main()
             case 1:
             {
                 User customer;
-                customer.loginPage(C);
+                customer.loginPage(db);
                 break;
             }
             case 3:

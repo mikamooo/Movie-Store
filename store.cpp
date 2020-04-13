@@ -1,7 +1,10 @@
 #include "store.hpp"
 
-void User::loginPage(connection& C)
+void User::loginPage(string db)
 {
+    string connect = "dbname = " + db + " user = customer password = password hostaddr = 127.0.0.1 port = 5432";
+    connection C(connect);
+
     string email, pass, sql;
     int tries = 2; // Only allow 2 more log in attempts after initial attempt
     bool attempts = false;

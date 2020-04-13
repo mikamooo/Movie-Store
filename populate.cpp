@@ -9,11 +9,11 @@ int main()
     string db, user, pass, connect;
 
     // Get the info for the database to connect to
-    cout << "Enter the name of the database: "; //<< endl;
+    cout << "Enter the name of the database: "; 
     cin >> db;
-    cout << "Enter the username: "; //<< endl;
+    cout << "Enter the username: "; 
     cin >> user;
-    cout << "Enter the password: "; //<< endl;
+    cout << "Enter the password: "; 
     cin >> pass;
 
     connect = "dbname = " + db + " user = " + user + " password = " + pass + " hostaddr = 127.0.0.1 port = 5432";
@@ -31,8 +31,8 @@ int main()
             cout << "Can't open database" << endl;
             return 1;
         }
-    
-        // Create SQL statements for creating the tables
+
+        // Create SQL statements for creating the tables and creating a guest user
         string tables = "DROP TABLE IF EXISTS Customers CASCADE;"
                         "CREATE TABLE Customers("  
                             "CID INTEGER,"
@@ -76,7 +76,16 @@ int main()
                             "CONSTRAINT cart_fk1 FOREIGN KEY(CID) REFERENCES Customers,"
                             "CONSTRAINT cart_fk2 FOREIGN KEY(MID) REFERENCES Movies);"
                             
-                        "CREATE USER guest WITH PASSWORD 'password';";
+                        "DROP USER IF EXISTS guest;"
+                        "CREATE USER guest WITH PASSWORD 'password';"
+                        "GRANT SELECT ON TABLE Movies TO guest;"
+                        
+                        "DROP USER IF EXISTS customer;"
+                        "CREATE USER customer WITH PASSWORD 'password';"
+                        "GRANT SELECT ON TABLE Movies TO customer;"
+                        "GRANT SELECT ON TABLE Orders TO customer;"
+                        "GRANT SELECT, UPDATE ON TABLE Customers TO customer;"
+                        "GRANT SELECT, INSERT, UPDATE ON TABLE Cart TO customer;";
 
         work W1(C); // Create a transactional object
         W1.exec(tables);

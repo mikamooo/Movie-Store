@@ -16,7 +16,7 @@ class Main
 class User
 {
     public:
-        void loginPage(connection&);
+        void loginPage(string);
         void userMenu(connection&);
         void userSearch();
         void addToCart();
