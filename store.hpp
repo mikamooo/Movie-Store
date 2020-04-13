@@ -23,7 +23,9 @@ class User
         void userSearch();
         void addToCart();
         void checkOut();
+        void viewCart();
         void viewOrders(connection&);
+        void viewAccount(connection&);
         void updateAccountInfo(connection&);
 };
 

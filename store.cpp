@@ -21,6 +21,7 @@ void User::loginPage(string db)
 
     do // Check if the user is in the database
     {
+        // Create SQL statement to get the tuple with the given email and password
         sql = "SELECT * FROM Customers WHERE Email = '" + email + "' AND Password = '" + pass + "';";
         
         nontransaction N1(C); // Create a non-transactional object
@@ -34,35 +35,35 @@ void User::loginPage(string db)
                 break;
             }    
                 
-            int option; // Prompt users to retry, create an account, or exit
+            int option; // Prompt users to retry, create an account, return to main menu, or exit
             cout << "Incorrect email or password." << endl
                  << "1) Try again" << endl
-                 << "2) Create an account" << endl
-                 << "3) Exit" << endl;
+                 << "2) Create an account" 
+                 << "3) Return to main menu" << endl;
             cin >> option;
 
-            if (option == 1)
+            switch(option) // Respond to the chosen option
             {
-                cout << "Email: ";
-                cin >> email;
-                cout << "Password: ";
-                cin >> pass;
-                tries--;
+                case 1:
+                {
+                    cout << "Email: ";
+                    cin >> email;
+                    cout << "Password: ";
+                    cin >> pass;
+                    tries--;
+                    break;
+                }
+                case 2:
+                    // Call a Main function
+                    return; 
+                case 3:
+                    return; 
             }
-            else if (option == 2)
-            {
-                // Call a Main function
-                return; 
-            }
-            else if (option == 3)
-            {
-                C.disconnect();
-                return;
-            }
+
         }
         else
         {
-            result::const_iterator c = R.begin();
+            result::const_iterator c = R.begin(); // Store the CID of the result 
             cid = c[0].as<int>();
             break;
         }
@@ -128,13 +129,14 @@ void User::viewOrders(connection& C)
          << "*                                                                     *" << endl
          << "***********************************************************************" << endl << endl;
 
+    // Create SQL statement to get the customers orders
     string sql = "SELECT OID, Received, Shipped, Address, Status FROM Orders WHERE CID = " 
                  + to_string(CID) + " ORDER BY Received;";
         
     nontransaction N1(C); // Create a non-transactional object
     result R(N1.exec(sql)); // Get the result of the query
 
-    for (result::const_iterator c = R.begin(); c != R.end(); c++)
+    for (result::const_iterator c = R.begin(); c != R.end(); c++) // Print the results
     {
         cout << "Order Number: " << c[0].as<string>() << endl;
         cout << "Date Received: " << c[1].as<string>() << endl;
@@ -145,7 +147,7 @@ void User::viewOrders(connection& C)
 
     do
     {
-        cout << "1) Back to user menu" << endl;
+        cout << "1) Return to user menu" << endl; // Prompt the user to return to the user menu
         cin >> option;
 
         switch(option)
@@ -159,4 +161,9 @@ void User::viewOrders(connection& C)
         }
 
     } while (option != 1);
+}
+
+void updateAccountInfo(connection&)
+{
+    
 }
