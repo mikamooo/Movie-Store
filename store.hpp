@@ -9,7 +9,6 @@ using namespace pqxx;
 class Main
 {
     public:
-        void searchPage();
         void createAccount();
 };
 
@@ -18,9 +17,8 @@ class User
         int cid;
         string database;
     public:
-        void loginPage(string);
+        void loginPage(string); 
         void userMenu(connection&);
-        void userSearch();
         void checkOut();
         void viewOrders(connection&);
         void viewAccount(connection&);
@@ -28,6 +26,8 @@ class User
         void changeEmail(connection&, connection&);
         bool changePassword(connection&, connection&);
         void changeAddress(connection&, connection&);
+        void changeName(connection&, connection&);
+        void changeBirthday(connection&, connection&);
 };
 
 class Admin
