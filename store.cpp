@@ -114,6 +114,7 @@ void User::userMenu(connection& C)
                 function.viewCart(C, cid);
                 break;}
             case 4:
+                viewAccount(C);
                 break;
             case 5:
                 option = -1;
@@ -135,7 +136,7 @@ void User::viewOrders(connection& C)
          << "*                                                                     *" << endl
          << "***********************************************************************" << endl << endl;
 
-    // Create SQL statement to get the customers orders
+    // Create SQL statement to get the customer's orders
     string sql = "SELECT OID, Received, Shipped, Address, Status FROM Orders WHERE CID = " 
                  + to_string(cid) + " ORDER BY Received;";
         
@@ -169,7 +170,63 @@ void User::viewOrders(connection& C)
     } while (option != 1);
 }
 
-void updateAccountInfo(connection&)
+void User::viewAccount(connection& C)
+{
+    int option;
+    cout << "***********************************************************************" << endl
+         << "*                                                                     *" << endl
+         << "*                            Your Account                             *" << endl
+         << "*                                                                     *" << endl
+         << "***********************************************************************" << endl << endl;
+
+    // Create SQL statement to create a view for the customer's account info
+    string sql = "DROP VIEW IF EXISTS CustomerView CASCADE;"
+                 "CREATE VIEW CustomerView AS SELECT Email, Password, Cname, Created, Address, DOB FROM Customers WHERE CID = " 
+                 + to_string(cid) + " ;";
+
+    work W1(C); // Create a transactional object
+    W1.exec(sql);
+    W1.commit();
+
+    // Create SQL statement to get the customer's account info
+    sql = "SELECT * FROM CustomerView;";
+        
+    nontransaction N1(C); // Create a non-transactional object
+    result R(N1.exec(sql)); // Get the result of the query
+
+    for (result::const_iterator c = R.begin(); c != R.end(); c++) // Print the results
+    {
+        cout << "Name: " << c[2].as<string>() << endl;
+        cout << "E-mail: " << c[0].as<string>() << endl;
+        cout << "Date Created: " << c[3].as<string>() << endl;
+        cout << "Address: " << c[4].as<string>() << endl;
+        cout << "Birthday: " << c[5].as<string>() << endl << endl;
+    }
+
+    do
+    {
+        cout << "1) Return to user menu" << endl // Prompt the user to return to the user menu or update their info
+             << "2) Update account info" << endl; 
+        cin >> option;
+
+        switch(option)
+        {
+            case 1:
+                return;
+                break;
+            case 2:
+                updateAccountInfo(C);
+                break;
+            default:
+                cout << "Please select a valid option." << endl;
+                break;
+        }
+
+    } while (option != 1 || option != 2);
+
+}
+
+void User::updateAccountInfo(connection&)
 {
     
 }
