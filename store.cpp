@@ -1,4 +1,5 @@
 #include "store.hpp"
+#include <string>
 
 void User::loginPage(string db)
 {
@@ -39,7 +40,7 @@ void User::loginPage(string db)
             int option; // Prompt users to retry, create an account, return to main menu, or exit
             cout << "Incorrect email or password." << endl
                  << "1) Try again" << endl
-                 << "2) Create an account" 
+                 << "2) Create an account" << endl
                  << "3) Return to main menu" << endl;
             cin >> option;
 
@@ -256,10 +257,8 @@ void User::updateAccountInfo(connection& C)
         switch(option)
         {
             case 1:
-            {
                 changeEmail(C1, C2);
                 break;
-            }
             case 2:
             {
                 valid = changePassword(C1, C2);
@@ -274,9 +273,9 @@ void User::updateAccountInfo(connection& C)
                 
                 break;
             }
-            case 3:{
-                
-                break;}
+            case 3:
+                changeAddress(C1, C2);
+                break;
             case 4:
                 
                 break;
@@ -375,4 +374,28 @@ bool User::changePassword(connection& C1, connection& C2)
 
     cout << "Your password has been succesfully changed." << endl;
     return true;
+}
+
+void User::changeAddress(connection& C1, connection& C2)
+{
+    // Create SQL statement to get the customer's account info
+    string sql = "SELECT Address FROM CustomerView;";
+    string change;
+                    
+    nontransaction N1(C1); // Create a non-transactional object
+    result R(N1.exec(sql)); // Get the result of the query
+    result::const_iterator c = R.begin(); 
+                
+    cout << "Your address is " << c[0].as<string>() << endl
+         << "Enter your new address: ";
+    getline(cin, change); // Gets the newline from entering a choice in update account menu
+    getline(cin, change); // Gets the address entered
+
+    sql = "UPDATE CustomerView SET Address = '" + change + "';";
+
+    work W1(C2); // Create a transactional object
+    W1.exec(sql);
+    W1.commit();
+
+    cout << "Your address has been succesfully changed." << endl;
 }

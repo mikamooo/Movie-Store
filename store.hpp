@@ -27,6 +27,7 @@ class User
         void updateAccountInfo(connection&);
         void changeEmail(connection&, connection&);
         bool changePassword(connection&, connection&);
+        void changeAddress(connection&, connection&);
 };
 
 class Admin
