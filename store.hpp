@@ -16,6 +16,7 @@ class Main
 class User
 {   private:
         int cid;
+        string database;
     public:
         void loginPage(string);
         void userMenu(connection&);
@@ -24,6 +25,8 @@ class User
         void viewOrders(connection&);
         void viewAccount(connection&);
         void updateAccountInfo(connection&);
+        void changeEmail(connection&, connection&);
+        bool changePassword(connection&, connection&);
 };
 
 class Admin
