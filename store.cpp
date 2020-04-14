@@ -6,7 +6,7 @@ void User::loginPage(string db)
     connection C(connect);
 
     string email, pass, sql;
-    int tries = 2, cid; // Only allow 2 more log in attempts after initial attempt
+    int tries = 2; // Only allow 2 more log in attempts after initial attempt
     bool attempts = false;
 
     cout << "***********************************************************************" << endl
@@ -62,8 +62,10 @@ void User::loginPage(string db)
 
         }
         else
-            {cid = R.at(0)["cid"].as<int>();
-            break;}
+        {
+            cid = R.at(0)["cid"].as<int>();
+            break;
+        }
 
     } while(!attempts);
 
@@ -85,40 +87,41 @@ void User::userMenu(connection& C)
 {
     int option;
     do{
-    cout << "***********************************************************************" << endl
-         << "*                    Welcome back movie lover!                        *" << endl
-         << "*                                                                     *" << endl
-         << "*                     Please select an option.                        *" << endl
-         << "***********************************************************************" << endl << endl
-         << "1) Browse for movies" << endl
-         << "2) View orders" << endl
-         << "3) View cart" << endl
-         << "4) View account info" << endl
-         << "5) Log Out" << endl;
-    cin >> option;
+        cout << "***********************************************************************" << endl
+            << "*                    Welcome back movie lover!                        *" << endl
+            << "*                                                                     *" << endl
+            << "*                     Please select an option.                        *" << endl
+            << "***********************************************************************" << endl << endl
+            << "1) Browse for movies" << endl
+            << "2) View orders" << endl
+            << "3) View cart" << endl
+            << "4) View account info" << endl
+            << "5) Log Out" << endl;
+        cin >> option;
     
-    switch(option)
-    {
-        case 1:{
-            functions function;
-            function.browseMovies(C);
-            function.addToCart(C,cid);
-            break;}
-        case 2:
-            viewOrders(C);
-            break;
-        case 3:{
-            functions function;
-            function.viewCart(C, cid);
-            break;}
-        case 4:
-            break;
-        case 5:
-            break;
-        default:
-            option =-1;
-                    break;
-    }
+        switch(option)
+        {
+            case 1:{
+                functions function;
+                function.browseMovies(C);
+                function.addToCart(C,cid);
+                break;}
+            case 2:
+                viewOrders(C);
+                break;
+            case 3:{
+                functions function;
+                function.viewCart(C, cid);
+                break;}
+            case 4:
+                break;
+            case 5:
+                option = -1;
+                break;
+            default:
+                option =-1;
+                        break;
+        }
     }while(option!=-1);
 
 }
@@ -156,7 +159,7 @@ void User::viewOrders(connection& C)
         switch(option)
         {
             case 1:
-                userMenu(C);
+                return;
                 break;
             default:
                 cout << "Please select a valid option." << endl;
