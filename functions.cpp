@@ -181,14 +181,14 @@ cout <<"Would you like to add to cart?" <<endl
 }
 
 void functions::viewCart(connection &C, int CID){
-string sql = "SELECT title, qty2 FROM movies NATURAL JOIN (SELECT cid, mid, qty as qty2 FROM cart) as cart2 WHERE cid = " +to_string(CID)+";";   
+string sql = "SELECT title, qty2, price FROM movies NATURAL JOIN (SELECT cid, mid, qty as qty2 FROM cart) as cart2 WHERE cid = " +to_string(CID)+";";   
 nontransaction N1(C); // Create a non-transactional object
 
 result *R = new result(N1.exec(sql)); // Get the result of the query
 int i = 1;
 for(auto row : *R)
 {
-    cout << i<< ". " << row["title"] << "\t" << row["qty2"]<< endl;
+    cout << i<< ". " << row["title"] << "\t" << row["qty2"]<< "\t$" << row["price"]<< endl;
     i++;
 }
 cout <<endl;
