@@ -378,7 +378,7 @@ void Admin::loginAdmin(string db)
     cout << "Password: ";
     cin >> pass;
 
-    do // Check if the customer is in the database
+    do // Check if the admin is in the database
     {
         // Create SQL statement to get the tuple with the given email and password
         sql = "SELECT * FROM Admins WHERE Email = '" + email + "' AND Password = '" + pass + "';";
@@ -388,7 +388,7 @@ void Admin::loginAdmin(string db)
 
         if (R.size() == 0) // If the result doesn't return a tuple, the email or password was incorrect
         {
-            if (tries == 0) // Once the customer has run out of attempts, stop giving them chances to login
+            if (tries == 0) // Once the admin has run out of attempts, stop giving them chances to login
             {
                 attempts = true;
                 break;
@@ -426,13 +426,13 @@ void Admin::loginAdmin(string db)
 
     } while(!attempts);
 
-    if (attempts) // Let the customer know they ran out of attempts and exit
+    if (attempts) // Let the admin know they ran out of attempts and exit
     {
         cout << "Too many invalid login attempts. You will be disconnected." << endl;
         C.disconnect();
         return;
     }
-    else // Or let the customer know that they have successfully logged in.
+    else // Or let the admin know that they have successfully logged in.
     {
         cout << "You have successfully logged in!" << endl;
         adminMenu(C);
@@ -491,7 +491,7 @@ void Admin::viewAccount(connection& C)
             << "*                                                                     *" << endl
             << "***********************************************************************" << endl << endl;
 
-        // Create SQL statement to create a view for the customer's account info
+        // Create SQL statement to create a view for the admin's account info
         string sql = "DROP VIEW IF EXISTS AdminView CASCADE;"
                     "CREATE VIEW AdminView AS SELECT Email, Password, AName FROM Admins WHERE AID = " 
                     + to_string(aid) + " ;";
@@ -500,7 +500,7 @@ void Admin::viewAccount(connection& C)
         W1.exec(sql);
         W1.commit();
 
-        // Create SQL statement to get the customer's account info
+        // Create SQL statement to get the admin's account info
         sql = "SELECT * FROM AdminView;";
             
         nontransaction N1(C); // Create a non-transactional object
@@ -512,7 +512,7 @@ void Admin::viewAccount(connection& C)
             cout << "E-mail: " << c[0].as<string>() << endl << endl;
         }
 
-        cout << "1) Return to user menu" << endl // Prompt the customer to return to the user menu or update their info
+        cout << "1) Return to user menu" << endl // Prompt the admin to return to the admin menu or update their info
              << "2) Update account info" << endl; 
         cin >> option;
 
@@ -566,7 +566,7 @@ void Admin::updateAccountInfo(connection& C)
             {
                 valid = u.changePassword(C1, C2, "AdminView");
 
-                if (!valid) // If the user enters an invalid current password too many times, disconnect
+                if (!valid) // If the admin enters an invalid current password too many times, disconnect
                 {
                     C1.disconnect();
                     C2.disconnect();
@@ -594,7 +594,7 @@ void Admin::updateAccountInfo(connection& C)
 
 void Utility::changeEmail(connection& C1, connection& C2, string view)
 {
-    // Create SQL statement to get the customer's email
+    // Create SQL statement to get the current email
     string sql = "SELECT Email FROM " + view + ";";
     string change;
                     
@@ -606,7 +606,7 @@ void Utility::changeEmail(connection& C1, connection& C2, string view)
          << "Enter your new e-mail: ";
     cin >> change;
 
-    // Create SQL statement to update the customer's e-mail
+    // Create SQL statement to update the customer/admin's e-mail
     sql = "UPDATE " + view + " SET Email = '" + change + "';";
 
     work W1(C2); // Create a transactional object
@@ -627,10 +627,10 @@ bool Utility::changePassword(connection& C1, connection& C2, string view)
         if (tries == 0) // Once the user has run out of attempts, stop giving them chances
             break;
 
-        cout << "Enter your current password: "; // Prompt customer to enter their current password 
+        cout << "Enter your current password: "; // Prompt customer/admin to enter their current password 
         cin >> curr;
 
-        // Create SQL statement to get the customer's name (can retrieve any attibute, just not the password)
+        // Create SQL statement to get the customer/admin's name (can retrieve any attibute, just not the password)
         sql = "SELECT * FROM " + view + " WHERE Password = '" + curr + "';";
 
         nontransaction N1(C1); // Create a non-transactional object
@@ -639,7 +639,7 @@ bool Utility::changePassword(connection& C1, connection& C2, string view)
 
         if (R.size() == 0) // Check that a tuple was returned
         {
-            cout << "Invalid password." << endl; // If not, let the customer try again
+            cout << "Invalid password." << endl; // If not, let the customer/admin try again
             valid = false;
             tries--;
         }
@@ -648,7 +648,7 @@ bool Utility::changePassword(connection& C1, connection& C2, string view)
 
     } while(!valid); 
                 
-    if (tries == 0 && valid == false) // If the customer used up all their attempts, disconnect
+    if (tries == 0 && valid == false) // If the customer/admin used up all their attempts, disconnect
     {
         cout << "Too many invalid login attempts. You will be disconnected." << endl;       
         return false;
@@ -666,7 +666,7 @@ bool Utility::changePassword(connection& C1, connection& C2, string view)
         cin >> confirm;
     }
 
-    // Create SQL statement to update the customer's password
+    // Create SQL statement to update the customer/admin's password
     sql = "UPDATE " + view + " SET Password = '" + change + "';";
 
     work W1(C2); // Create a transactional object
@@ -679,7 +679,7 @@ bool Utility::changePassword(connection& C1, connection& C2, string view)
 
 void Utility::changeName(connection& C1, connection& C2, string view, string name)
 {
-    // Create SQL statement to get the customer's name
+    // Create SQL statement to get the customer/admin's name
     string sql = "SELECT " + name + " FROM " + view + ";";
     string first, last;
                     
@@ -693,7 +693,7 @@ void Utility::changeName(connection& C1, connection& C2, string view, string nam
     cout << "Enter your new last name: ";
     cin >> last;
 
-    // Create SQL statement to update the customer's name
+    // Create SQL statement to update the customer/admin's name
     sql = "UPDATE " + view + " SET " + name + " = '" + first + " " + last + "';";
 
     work W1(C2); // Create a transactional object
