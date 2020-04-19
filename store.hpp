@@ -23,18 +23,29 @@ class User
         void viewOrders(connection&);
         void viewAccount(connection&);
         void updateAccountInfo(connection&);
-        void changeEmail(connection&, connection&);
-        bool changePassword(connection&, connection&);
         void changeAddress(connection&, connection&);
-        void changeName(connection&, connection&);
         void changeBirthday(connection&, connection&);
 };
 
 class Admin
 {
+    private:
+        int aid;
+        string database;
     public:
-        void loginAdmin();
+        void loginAdmin(string);
+        void adminMenu(connection&);
+        void viewAccount(connection&);
+        void updateAccountInfo(connection&);
         void updateMovies();
+};
+
+class Utility
+{
+    public:
+        void changeEmail(connection&, connection&, string);
+        bool changePassword(connection&, connection&, string);
+        void changeName(connection&, connection&, string, string);
 };
 
 #endif

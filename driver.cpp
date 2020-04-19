@@ -57,6 +57,13 @@ int main()
                     function.browseMovies(C);
                     break;
                 }
+                case 4:
+                {
+                    Admin admin;
+                    admin.loginAdmin(db);
+                    option = -1;
+                    break;
+                }
                 default:
                 option =-1;
                     break;

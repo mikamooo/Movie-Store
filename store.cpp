@@ -59,7 +59,10 @@ void User::loginPage(string db)
                     // Call a Main function
                     return; 
                 case 3:
-                    return; 
+                    return;
+                default:
+                    cout << "Please select a valid option." << endl;
+                    break; 
             }
         }
         else
@@ -238,6 +241,7 @@ void User::updateAccountInfo(connection& C)
     int option, tries = 3;
     string sql, change, curr, confirm;
     bool valid;
+    Utility u;
 
     do
     {
@@ -257,11 +261,11 @@ void User::updateAccountInfo(connection& C)
         switch(option)
         {
             case 1:
-                changeEmail(C1, C2);
+                u.changeEmail(C1, C2, "CustomerView");
                 break;
             case 2:
             {
-                valid = changePassword(C1, C2);
+                valid = u.changePassword(C1, C2, "CustomerView");
 
                 if (!valid) // If the user enters an invalid current password too many times, disconnect
                 {
@@ -277,7 +281,7 @@ void User::updateAccountInfo(connection& C)
                 changeAddress(C1, C2);
                 break;
             case 4:
-                changeName(C1, C2);
+                u.changeName(C1, C2, "CustomerView", "CName");
                 break;
             case 5:
                 changeBirthday(C1, C2);
@@ -295,10 +299,303 @@ void User::updateAccountInfo(connection& C)
     C2.disconnect();
 }
 
-void User::changeEmail(connection& C1, connection& C2)
+void User::changeAddress(connection& C1, connection& C2)
+{
+    // Create SQL statement to get the customer's address
+    string sql = "SELECT Address FROM CustomerView;";
+    string street, city, state, zip;
+                    
+    nontransaction N1(C1); // Create a non-transactional object
+    result R(N1.exec(sql)); // Get the result of the query
+    result::const_iterator c = R.begin(); 
+                
+    cout << "Your address is " << c[0].as<string>() << endl
+         << "Enter your new street address: ";
+    getline(cin, street); // Get the newline character after selecting an option first
+    getline(cin, street);
+    cout << "Enter your new city: ";
+    getline(cin, city);
+    cout << "Enter your new state: ";
+    getline(cin, state);
+    cout << "Enter your new zipcode: ";
+    getline(cin, zip);
+
+    // Create SQL statement to update the customer's address
+    sql = "UPDATE CustomerView SET Address = '" + street + " " + city + ", " + state + " " + zip + "';";
+
+    work W1(C2); // Create a transactional object
+    W1.exec(sql);
+    W1.commit();
+
+    cout << "Your address has been succesfully changed." << endl << endl;
+}
+
+void User::changeBirthday(connection& C1, connection& C2)
+{
+    // Create SQL statement to get the customer's birthday
+    string sql = "SELECT DOB FROM CustomerView;";
+    string year, month, day;
+                    
+    nontransaction N1(C1); // Create a non-transactional object
+    result R(N1.exec(sql)); // Get the result of the query
+    result::const_iterator c = R.begin(); 
+                
+    cout << "Your birthday is " << c[0].as<string>() << endl
+         << "Enter your new birthday year (YYYY): ";
+    cin >> year;
+    cout << "Enter your new birthday month (MM): ";
+    cin >> month;
+    cout << "Enter your new birthday day (DD): ";
+    cin >> day;
+
+    // Create SQL statement to update the customer's birthday
+    sql = "UPDATE CustomerView SET DOB = '" + year + "-" + month + "-" + day + "';";
+
+    work W1(C2); // Create a transactional object
+    W1.exec(sql);
+    W1.commit();
+
+    cout << "Your birthday has been succesfully changed." << endl << endl;
+}
+
+void Admin::loginAdmin(string db)
+{
+    string connect = "dbname = " + db + " user = movie_admin password = admin123 hostaddr = 127.0.0.1 port = 5432";
+    connection C(connect);
+
+    string email, pass, sql;
+    int tries = 2; // Only allow 2 more log in attempts after initial attempt
+    bool attempts = false;
+    database = db;
+
+    cout << "***********************************************************************" << endl
+         << "*                                                                     *" << endl
+         << "*                             Admin Login                             *" << endl
+         << "*                                                                     *" << endl
+         << "***********************************************************************" << endl << endl
+         << "Email: "; 
+    cin >> email;
+    cout << "Password: ";
+    cin >> pass;
+
+    do // Check if the customer is in the database
+    {
+        // Create SQL statement to get the tuple with the given email and password
+        sql = "SELECT * FROM Admins WHERE Email = '" + email + "' AND Password = '" + pass + "';";
+        
+        nontransaction N1(C); // Create a non-transactional object
+        result R(N1.exec(sql)); // Get the result of the query
+
+        if (R.size() == 0) // If the result doesn't return a tuple, the email or password was incorrect
+        {
+            if (tries == 0) // Once the customer has run out of attempts, stop giving them chances to login
+            {
+                attempts = true;
+                break;
+            }    
+                
+            int option; // Prompt users to retry, create an account, return to main menu, or exit
+            cout << "Incorrect email or password." << endl
+                 << "1) Try again" << endl
+                 << "2) Return to main menu" << endl;
+            cin >> option;
+
+            switch(option) // Respond to the chosen option
+            {
+                case 1:
+                {
+                    cout << "Email: ";
+                    cin >> email;
+                    cout << "Password: ";
+                    cin >> pass;
+                    tries--;
+                    break;
+                }
+                case 2:
+                    return; 
+                default:
+                    cout << "Please select a valid option." << endl;
+                    break;
+            }
+        }
+        else
+        {
+            aid = R.at(0)["aid"].as<int>();
+            break;
+        }
+
+    } while(!attempts);
+
+    if (attempts) // Let the customer know they ran out of attempts and exit
+    {
+        cout << "Too many invalid login attempts. You will be disconnected." << endl;
+        C.disconnect();
+        return;
+    }
+    else // Or let the customer know that they have successfully logged in.
+    {
+        cout << "You have successfully logged in!" << endl;
+        adminMenu(C);
+    }
+}
+
+void Admin::adminMenu(connection& C)
+{
+    int option;
+    do
+    {
+        cout << "***********************************************************************" << endl
+             << "*                   Welcome back administrator!                       *" << endl
+             << "*                                                                     *" << endl
+             << "*                     Please select an option.                        *" << endl
+             << "***********************************************************************" << endl << endl
+             << "1) Browse for movies" << endl
+             << "2) View your information" << endl
+             << "3) Add a new administrator" << endl
+             << "4) Log Out" << endl;
+
+        cin >> option;
+    
+        switch(option)
+        {
+            case 1:{
+                functions function;
+                function.browseMovies(C);
+                //Update movies function
+                break;}
+            case 2:
+                viewAccount(C);
+                break;
+            case 3:{
+                // Function to add an admin
+                break;}
+            case 4:
+                break;
+            default:
+                cout << "Please select a valid option." << endl;
+                break;
+        }
+
+    } while(option != 4);
+}
+
+void Admin::viewAccount(connection& C)
+{
+    int option;
+
+    do
+    {
+        cout << "***********************************************************************" << endl
+            << "*                                                                     *" << endl
+            << "*                        Your Account Info                            *" << endl
+            << "*                                                                     *" << endl
+            << "***********************************************************************" << endl << endl;
+
+        // Create SQL statement to create a view for the customer's account info
+        string sql = "DROP VIEW IF EXISTS AdminView CASCADE;"
+                    "CREATE VIEW AdminView AS SELECT Email, Password, AName FROM Admins WHERE AID = " 
+                    + to_string(aid) + " ;";
+
+        work W1(C); // Create a transactional object
+        W1.exec(sql);
+        W1.commit();
+
+        // Create SQL statement to get the customer's account info
+        sql = "SELECT * FROM AdminView;";
+            
+        nontransaction N1(C); // Create a non-transactional object
+        result R(N1.exec(sql)); // Get the result of the query
+
+        for (result::const_iterator c = R.begin(); c != R.end(); c++) // Print the results
+        {
+            cout << "Name: " << c[2].as<string>() << endl;
+            cout << "E-mail: " << c[0].as<string>() << endl << endl;
+        }
+
+        cout << "1) Return to user menu" << endl // Prompt the customer to return to the user menu or update their info
+             << "2) Update account info" << endl; 
+        cin >> option;
+
+        switch(option)
+        {
+            case 1:
+                return;
+                break;
+            case 2:
+                updateAccountInfo(C);
+                break;
+            default:
+                cout << "Please select a valid option." << endl;
+                break;
+        }
+
+    } while (option != 1 || option != 2);
+
+}
+
+void Admin::updateAccountInfo(connection& C)
+{
+    string connect = "dbname = " + database + " user = movie_admin password = admin123 hostaddr = 127.0.0.1 port = 5432";
+    connection C1(connect); // Create new connections so that another nontransaction can be used
+    connection C2(connect); // And so that transactions can be used after a nontransaction
+
+    int option, tries = 3;
+    string sql, change, curr, confirm;
+    bool valid;
+    Utility u;
+
+    do
+    {
+        cout << "***********************************************************************" << endl
+            << "*                        Update Account Info                          *" << endl
+            << "*                                                                     *" << endl
+            << "*                      Please select an option.                       *" << endl
+            << "***********************************************************************" << endl << endl
+            << "1) Change e-mail" << endl
+            << "2) Change password" << endl
+            << "3) Change name" << endl
+            << "4) Return to account info" << endl;
+            cin >> option;
+
+        switch(option)
+        {
+            case 1:
+                u.changeEmail(C1, C2, "AdminView");
+                break;
+            case 2:
+            {
+                valid = u.changePassword(C1, C2, "AdminView");
+
+                if (!valid) // If the user enters an invalid current password too many times, disconnect
+                {
+                    C1.disconnect();
+                    C2.disconnect();
+                    C.disconnect();
+                    return; 
+                }
+                
+                break;
+            }
+            case 3:
+                u.changeName(C1, C2, "AdminView", "AName");
+                break;
+            case 4:
+                return;
+            default:
+                cout << "Please select a valid option." << endl;
+                break;
+        }
+
+    } while(option != 4);
+
+    C1.disconnect();
+    C2.disconnect();
+}
+
+void Utility::changeEmail(connection& C1, connection& C2, string view)
 {
     // Create SQL statement to get the customer's email
-    string sql = "SELECT Email FROM CustomerView;";
+    string sql = "SELECT Email FROM " + view + ";";
     string change;
                     
     nontransaction N1(C1); // Create a non-transactional object
@@ -310,7 +607,7 @@ void User::changeEmail(connection& C1, connection& C2)
     cin >> change;
 
     // Create SQL statement to update the customer's e-mail
-    sql = "UPDATE CustomerView SET Email = '" + change + "';";
+    sql = "UPDATE " + view + " SET Email = '" + change + "';";
 
     work W1(C2); // Create a transactional object
     W1.exec(sql);
@@ -319,7 +616,7 @@ void User::changeEmail(connection& C1, connection& C2)
     cout << "Your e-mail has been succesfully changed." << endl << endl;
 }
 
-bool User::changePassword(connection& C1, connection& C2)
+bool Utility::changePassword(connection& C1, connection& C2, string view)
 {
     int tries = 3;
     string sql, change, curr, confirm;
@@ -334,7 +631,7 @@ bool User::changePassword(connection& C1, connection& C2)
         cin >> curr;
 
         // Create SQL statement to get the customer's name (can retrieve any attibute, just not the password)
-        sql = "SELECT Cname FROM CustomerView WHERE Password = '" + curr + "';";
+        sql = "SELECT * FROM " + view + " WHERE Password = '" + curr + "';";
 
         nontransaction N1(C1); // Create a non-transactional object
         result R(N1.exec(sql)); // Get the result of the query
@@ -370,7 +667,7 @@ bool User::changePassword(connection& C1, connection& C2)
     }
 
     // Create SQL statement to update the customer's password
-    sql = "UPDATE CustomerView SET Password = '" + change + "';";
+    sql = "UPDATE " + view + " SET Password = '" + change + "';";
 
     work W1(C2); // Create a transactional object
     W1.exec(sql);
@@ -380,41 +677,10 @@ bool User::changePassword(connection& C1, connection& C2)
     return true;
 }
 
-void User::changeAddress(connection& C1, connection& C2)
-{
-    // Create SQL statement to get the customer's address
-    string sql = "SELECT Address FROM CustomerView;";
-    string street, city, state, zip;
-                    
-    nontransaction N1(C1); // Create a non-transactional object
-    result R(N1.exec(sql)); // Get the result of the query
-    result::const_iterator c = R.begin(); 
-                
-    cout << "Your address is " << c[0].as<string>() << endl
-         << "Enter your new street address: ";
-    getline(cin, street); // Get the newline character after selecting an option first
-    getline(cin, street);
-    cout << "Enter your new city: ";
-    getline(cin, city);
-    cout << "Enter your new state: ";
-    getline(cin, state);
-    cout << "Enter your new zipcode: ";
-    getline(cin, zip);
-
-    // Create SQL statement to update the customer's address
-    sql = "UPDATE CustomerView SET Address = '" + street + " " + city + ", " + state + " " + zip + "';";
-
-    work W1(C2); // Create a transactional object
-    W1.exec(sql);
-    W1.commit();
-
-    cout << "Your address has been succesfully changed." << endl << endl;
-}
-
-void User::changeName(connection& C1, connection& C2)
+void Utility::changeName(connection& C1, connection& C2, string view, string name)
 {
     // Create SQL statement to get the customer's name
-    string sql = "SELECT Cname FROM CustomerView;";
+    string sql = "SELECT " + name + " FROM " + view + ";";
     string first, last;
                     
     nontransaction N1(C1); // Create a non-transactional object
@@ -428,39 +694,11 @@ void User::changeName(connection& C1, connection& C2)
     cin >> last;
 
     // Create SQL statement to update the customer's name
-    sql = "UPDATE CustomerView SET Cname = '" + first + " " + last + "';";
+    sql = "UPDATE " + view + " SET " + name + " = '" + first + " " + last + "';";
 
     work W1(C2); // Create a transactional object
     W1.exec(sql);
     W1.commit();
 
     cout << "Your name has been succesfully changed." << endl << endl;
-}
-
-void User::changeBirthday(connection& C1, connection& C2)
-{
-    // Create SQL statement to get the customer's birthday
-    string sql = "SELECT DOB FROM CustomerView;";
-    string year, month, day;
-                    
-    nontransaction N1(C1); // Create a non-transactional object
-    result R(N1.exec(sql)); // Get the result of the query
-    result::const_iterator c = R.begin(); 
-                
-    cout << "Your birthday is " << c[0].as<string>() << endl
-         << "Enter your new birthday year (YYYY): ";
-    cin >> year;
-    cout << "Enter your new birthday month (MM): ";
-    cin >> month;
-    cout << "Enter your new birthday day (DD): ";
-    cin >> day;
-
-    // Create SQL statement to update the customer's birthday
-    sql = "UPDATE CustomerView SET DOB = '" + year + "-" + month + "-" + day + "';";
-
-    work W1(C2); // Create a transactional object
-    W1.exec(sql);
-    W1.commit();
-
-    cout << "Your birthday has been succesfully changed." << endl << endl;
 }

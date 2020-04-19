@@ -76,8 +76,8 @@ int main()
                             "CONSTRAINT cart_fk1 FOREIGN KEY(CID) REFERENCES Customers,"
                             "CONSTRAINT cart_fk2 FOREIGN KEY(MID) REFERENCES Movies);"
 
-                        "DROP TABLE IF EXISTS Admin CASCADE;"
-                        "CREATE TABLE Admin("
+                        "DROP TABLE IF EXISTS Admins CASCADE;"
+                        "CREATE TABLE Admins("
                             "AID INTEGER,"
                             "Email VARCHAR(50),"
                             "Password VARCHAR(20),"
@@ -97,7 +97,8 @@ int main()
                         
                         "DROP USER IF EXISTS movie_admin;"
                         "CREATE USER movie_admin WITH PASSWORD 'admin123';"
-                        "GRANT SELECT, UPDATE, DELETE, INSERT ON TABLE Movies TO movie_guest;";
+                        "GRANT SELECT, UPDATE, DELETE, INSERT ON TABLE Movies TO movie_admin;"
+                        "GRANT SELECT, UPDATE ON TABLE Admins TO movie_admin";
 
         work W1(C); // Create a transactional object
         W1.exec(tables);
@@ -349,11 +350,11 @@ int main()
         W4.exec(insert);
         W4.commit();
 
-        insert = "INSERT INTO Admin(AID, Email, Password, AName)"
+        insert = "INSERT INTO Admins(AID, Email, Password, AName)"
                     "VALUES (1110, 'mikam@usf.edu', 'Admin1!', 'Mika Morrisson');"
-                "INSERT INTO Admin(AID, Email, Password, AName)"
+                "INSERT INTO Admins(AID, Email, Password, AName)"
                     "VALUES (1111, 'justinr@usf.edu', 'Admin2!', 'Justin Rodney');"
-                "INSERT INTO Admin(AID, Email, Password, AName)"
+                "INSERT INTO Admins(AID, Email, Password, AName)"
                     "VALUES (1112, 'wilsonp@usf.edu', 'Admin3!', 'Wilson Pinales Tejeda');";
         
         work W5(C); // Create a transactional object
