@@ -38,7 +38,7 @@ int main()
                             "CID INTEGER,"
                             "Email VARCHAR(50),"
                             "Password VARCHAR(20),"
-                            "CName VARCHAR(40),"
+                            "CName VARCHAR(50),"
                             "Created DATE,"
                             "Address VARCHAR(100),"
                             "DOB DATE,"
@@ -47,7 +47,7 @@ int main()
                         "DROP TABLE IF EXISTS Movies CASCADE;"
                         "CREATE TABLE Movies("
                             "MID INTEGER,"
-                            "Title VARCHAR(50),"
+                            "Title VARCHAR(60),"
                             "Genre VARCHAR(20),"
                             "Year DATE,"
                             "Qty INTEGER CHECK(Qty >= 0),"
@@ -75,6 +75,14 @@ int main()
                             "CONSTRAINT cart_pk PRIMARY KEY(CID, MID),"
                             "CONSTRAINT cart_fk1 FOREIGN KEY(CID) REFERENCES Customers,"
                             "CONSTRAINT cart_fk2 FOREIGN KEY(MID) REFERENCES Movies);"
+
+                        "DROP TABLE IF EXISTS Admin CASCADE;"
+                        "CREATE TABLE Admin("
+                            "AID INTEGER,"
+                            "Email VARCHAR(50),"
+                            "Password VARCHAR(20),"
+                            "AName VARCHAR(50),"
+                            "PRIMARY KEY(AID));"
                             
                         "DROP USER IF EXISTS movie_guest;"
                         "CREATE USER movie_guest WITH PASSWORD 'password';"
@@ -85,7 +93,11 @@ int main()
                         "GRANT SELECT ON TABLE Movies TO movie_customer;"
                         "GRANT SELECT ON TABLE Orders TO movie_customer;"
                         "GRANT SELECT, UPDATE ON TABLE Customers TO movie_customer;"
-                        "GRANT SELECT, INSERT, UPDATE ON TABLE Cart TO movie_customer;";
+                        "GRANT SELECT, INSERT, UPDATE ON TABLE Cart TO movie_customer;"
+                        
+                        "DROP USER IF EXISTS movie_admin;"
+                        "CREATE USER movie_admin WITH PASSWORD 'admin123';"
+                        "GRANT SELECT, UPDATE, DELETE, INSERT ON TABLE Movies TO movie_guest;";
 
         work W1(C); // Create a transactional object
         W1.exec(tables);
@@ -336,6 +348,17 @@ int main()
         work W4(C); // Create a transactional object
         W4.exec(insert);
         W4.commit();
+
+        insert = "INSERT INTO Admin(AID, Email, Password, AName)"
+                    "VALUES (1110, 'mikam@usf.edu', 'Admin1!', 'Mika Morrisson');"
+                "INSERT INTO Admin(AID, Email, Password, AName)"
+                    "VALUES (1111, 'justinr@usf.edu', 'Admin2!', 'Justin Rodney');"
+                "INSERT INTO Admin(AID, Email, Password, AName)"
+                    "VALUES (1112, 'wilsonp@usf.edu', 'Admin3!', 'Wilson Pinales Tejeda');";
+        
+        work W5(C); // Create a transactional object
+        W5.exec(insert);
+        W5.commit();
 
         C.disconnect(); // Disconnect from the database
 
