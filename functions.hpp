@@ -13,10 +13,13 @@ functions();
 ~functions();
 void browseMovies(connection &C);
 void browseMoviesUser(connection &C);
+int selectMovie(connection &C, int user =0);
 void displayAllMovies(connection &C);
+void displayByPrice(connection &C);
+void displayByTitle(connection &C);
 void displayAllMoviesByGenre(connection &C, string genre);
 void genrePrompt(connection &C);
-void addToCart(connection &C, int cid);
+void addToCart(connection &C, int cid, int num);
 void viewCart(connection &C, int cid);
 };
 

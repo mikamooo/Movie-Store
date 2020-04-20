@@ -19,7 +19,9 @@ cout            << "************************************************************
                 << "*                    Please select an option.                         *" << endl
                 << "***********************************************************************" << endl << endl 
                 << "1) View all" << endl
-                << "2) Browse by genre" << endl;
+                << "2) Browse by Genre" << endl
+                << "3) Browse by Price(low-high)" << endl
+                << "4) Browse by Title" << endl;
  cin >> option;
     switch(option)
     {
@@ -31,6 +33,16 @@ cout            << "************************************************************
         case 2:
         {
             genrePrompt(C);
+            break;
+        }
+        case 3:
+        {
+            displayByPrice(C);
+            break;
+        }
+        case 4:
+        {   
+            displayByTitle(C);
             break;
         }
         default:
@@ -148,35 +160,78 @@ cout            << "************************************************************
     }
 }
 
-void functions::addToCart(connection &C, int cid)
+int functions::selectMovie(connection &C, int user)
 {
-int option;
-cout <<"Would you like to add to cart?" <<endl
-        <<"1) Yes"<<endl
-        <<"2) No"<<endl;
-
- cin >> option;
-    switch(option)
+    int option; int select = -1;
+    
+    do
     {
-        case 1:
+    
+    
+    cout    <<"Would you like to select a movie?" <<endl
+            <<"1) Yes"<<endl
+            <<"2) No"<<endl;
+
+    cin>>option;
+        switch(option)
         {
-            cout << "Enter the number of the movie you would like to add to your cart!" <<endl;
-            cin >> option;
-            if(res ==nullptr || option <1 || option >res->size())//if there is no
+            case 1:
+            {
+                cout << "Enter the number of the movie you would like to select!" <<endl;
+                cin >> select;
+                if(res ==nullptr || select <1 || select >res->size())//if there is no
+                    {cout << "Sorry! We experienced some technical difficulties"<<endl;
+                    select = -1;
+                    break;
+                    }
+                cout <<res->at(select-1)["title"] <<endl <<"Synopsis: "<<res->at(select-1)["des"]  <<endl;
+                if(user ==1){
+                    cout << "Would you like to add this movie to your cart?"<<endl
+                        <<"1)Yes"<<endl
+                        <<"2)No" <<endl;
+                    cin >> option;
+                    switch (option)
+                    {
+                    case 1:
+                        {option = -1;
+                        break;
+                        }
+                    default:
+                        {select = -1;
+                        option = 0;
+                        break;
+                        }
+                    }
+                    }
+                break;
+            }
+            case 2:
+            {
+                option = -1;
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+    } while (option !=-1);
+    return select;
+}
+
+void functions::addToCart(connection &C, int cid, int num)
+{
+            if(res ==nullptr || num <1 || num >res->size())//if there is no
                     {cout << "Sorry! We experienced some technical difficulties"<<endl;
                     return;
                     }
             string insert = "INSERT INTO CART(CID, mid, qty)"
-                        "VALUES ("+to_string(cid) +',' +res->at(option-1)["mid"].as<string>()+",1)"
+                        "VALUES ("+to_string(cid) +',' +res->at(num-1)["mid"].as<string>()+",1)"
                         "ON CONFLICT ON CONSTRAINT cart_pk DO UPDATE SET qty = CART.qty + 1;";
             work W(C); // Create a transactional object
             W.exec(insert);
             W.commit();
-            break;
-        }
-        case 2:
-        break;
-    }
+       
     return;
 }
 
@@ -199,4 +254,49 @@ if(res!=nullptr)//if result is not null, delete current contents.
 res = R;
 return;
 
+}
+
+void functions::displayByPrice(connection &C)
+{
+string sql = "SELECT * FROM movies ORDER BY price;";   
+nontransaction N1(C); // Create a non-transactional object
+result *R = new result(N1.exec(sql)); // Get the result of the query
+int i = 1;
+for(auto row : *R)
+{
+    cout << i<< ". " << row["title"] << "\t\t$"<< row["price"]<< endl;
+    i++;
+}
+cout <<endl;
+if(res!=nullptr)//if result is not null, delete current contents.
+    {
+    delete res;
+    }
+res = R;
+return;
+}
+
+void functions::displayByTitle(connection &C)
+{
+string option;
+cout << "Enter the title of the movie: " <<endl;
+cin.ignore();
+getline(cin, option);
+//cin >> option; cin.clear();
+string sql = "SELECT * FROM movies WHERE title like'%"+option+"%';";   
+nontransaction N1(C); // Create a non-transactional object
+result *R = new result(N1.exec(sql)); // Get the result of the query
+int i = 1;
+for(auto row : *R)
+{
+    cout << i<< ". " << row["title"] << "\t\t$"<< row["price"]<< endl;
+    i++;
+}
+cout <<endl;
+if(res!=nullptr)//if result is not null, delete current contents.
+    {
+    delete res;
+    }
+res = R;
+return;
 }

@@ -55,6 +55,7 @@ int main()
                 case 3:
                 {functions function;
                     function.browseMovies(C);
+                    function.selectMovie(C);
                     break;
                 }
                 case 4:

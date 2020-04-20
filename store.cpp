@@ -108,7 +108,9 @@ void User::userMenu(connection& C)
             case 1:{
                 functions function;
                 function.browseMovies(C);
-                function.addToCart(C,cid);
+                int select = function.selectMovie(C,1);
+                if(select!=-1)
+                    function.addToCart(C,cid, select);
                 break;}
             case 2:
                 viewOrders(C);
