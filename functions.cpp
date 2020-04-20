@@ -60,13 +60,7 @@ string sql = "SELECT * FROM movies;";
 nontransaction N1(C); // Create a non-transactional object
 
 result *R = new result(N1.exec(sql)); // Get the result of the query
-int i = 1;
-for(auto row : *R)
-{
-    cout << i<< ". " << row["title"] << endl;
-    i++;
-}
-cout <<endl;
+printMovies(R);
 if(res!=nullptr)//if result is not null, delete current contents.
     {
     delete res;
@@ -80,13 +74,7 @@ void functions::displayAllMoviesByGenre(connection &C, string genre)
 string sql = "SELECT * FROM movies WHERE Genre ='" +genre +"';";   
 nontransaction N1(C); // Create a non-transactional object
 result *R = new result(N1.exec(sql)); // Get the result of the query
-int i = 1;
-for(auto row : *R)
-{
-    cout << i<< ". " << row["title"] << endl;
-    i++;
-}
-cout <<endl;
+printMovies(R);
 if(res!=nullptr)//if result is not null, delete current contents.
     {
     delete res;
@@ -261,13 +249,7 @@ void functions::displayByPrice(connection &C)
 string sql = "SELECT * FROM movies ORDER BY price;";   
 nontransaction N1(C); // Create a non-transactional object
 result *R = new result(N1.exec(sql)); // Get the result of the query
-int i = 1;
-for(auto row : *R)
-{
-    cout << i<< ". " << row["title"] << "\t\t$"<< row["price"]<< endl;
-    i++;
-}
-cout <<endl;
+printMovies(R);
 if(res!=nullptr)//if result is not null, delete current contents.
     {
     delete res;
@@ -286,17 +268,49 @@ getline(cin, option);
 string sql = "SELECT * FROM movies WHERE title like'%"+option+"%';";   
 nontransaction N1(C); // Create a non-transactional object
 result *R = new result(N1.exec(sql)); // Get the result of the query
-int i = 1;
-for(auto row : *R)
-{
-    cout << i<< ". " << row["title"] << "\t\t$"<< row["price"]<< endl;
-    i++;
-}
-cout <<endl;
+
+printMovies(R);
 if(res!=nullptr)//if result is not null, delete current contents.
     {
     delete res;
     }
 res = R;
+return;
+}
+
+void functions::printMovies(result *R)
+{int max_text_size= 40;
+int i = 1;
+cout    <<setw(max_text_size+10+5+6)<<setfill('_') << ""<<endl
+         <<"|#|"<<setw((max_text_size+10+5+6)/2 -2)<<setfill(' ') <<"Movie Title"
+         <<setw((max_text_size+10+5+6)/2) << "| Genre | Price|"<<endl
+         <<setw(max_text_size+10+5+6)<<setfill('-') << ""<<endl;
+        // <<
+cout <<setfill(' ');
+for(auto row : *R)
+{
+    
+    string temp = to_string(row["title"]);
+    if(temp.length()>max_text_size)
+        temp= temp.substr(0,max_text_size-3) + "...";
+    int stock = row["qty"].as<int>();
+    string st;
+    if(stock <=0)
+    {st = "OUT OF STOCK";       }
+    else if(stock<=3)
+    {
+        st = "LOW STOCK";
+    }
+    else
+    {
+        st = "IN STOCK";
+    }
+    
+
+    cout <<setw(4)<<left <<to_string(i)+ ". "  << setw(40)<<temp<<setw(10)<<to_string(row["genre"]) <<setw(6)<< "$"
+    + to_string(row["price"]) << " " <<st<<endl;
+    i++;
+}
+cout <<endl;
 return;
 }

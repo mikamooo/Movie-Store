@@ -2,11 +2,13 @@
 #define _FUNCTIONS_H
 #include <pqxx/pqxx>
 #include <iostream>
+#include <iomanip>
 using namespace std;
 using namespace pqxx;
 
 class functions{
-
+private:
+void printMovies(result *R);
 public:
 result *res; // this holds the result of the querry to be accessed by users
 functions();
