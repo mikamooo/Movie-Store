@@ -87,6 +87,7 @@ int main()
                         "DROP USER IF EXISTS movie_guest;"
                         "CREATE USER movie_guest WITH PASSWORD 'password';"
                         "GRANT SELECT ON TABLE Movies TO movie_guest;"
+                        "GRANT INSERT ON TABLE Customers TO movie_guest;"
                         
                         "DROP USER IF EXISTS movie_customer;"
                         "CREATE USER movie_customer WITH PASSWORD 'password';"
