@@ -9,7 +9,7 @@ using namespace pqxx;
 class Main
 {
     public:
-        void createAccount();
+        void createAccount(string);
 };
 
 class User
@@ -21,8 +21,8 @@ class User
         void userMenu(connection&);
         void checkOut();
         void viewOrders(connection&);
-        void viewAccount(connection&);
-        void updateAccountInfo(connection&);
+        int viewAccount(connection&);
+        int updateAccountInfo(connection&);
         void changeAddress(connection&, connection&);
         void changeBirthday(connection&, connection&);
 };
@@ -35,9 +35,9 @@ class Admin
     public:
         void loginAdmin(string);
         void adminMenu(connection&);
-        void viewAccount(connection&);
-        void updateAccountInfo(connection&);
-        void addNewAdmin(connection&);
+        int viewAccount(connection&);
+        int updateAccountInfo(connection&);
+        int addNewAdmin(connection&);
         void updateMovies();
 };
 

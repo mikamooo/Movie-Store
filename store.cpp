@@ -1,6 +1,97 @@
 #include "store.hpp"
 #include <string>
 
+void Main::createAccount(string db)
+{
+    string connect = "dbname = " + db + " user = movie_guest password = password hostaddr = 127.0.0.1 port = 5432";
+    string connect1 = "dbname = " + db + " user = movie_customer password = password hostaddr = 127.0.0.1 port = 5432";
+    connection C(connect);
+    connection C1(connect1);
+    connection C2(connect1);
+
+    string street, city, state, zip, year, month, day, email, password, first, last, sql, confirm;
+    int exists = 0, new_cid;
+
+    getline(cin, street); // Get the newline character after selecting an option first
+
+    do
+    {
+        cout << "Enter your e-mail: ";
+        getline(cin, email);
+
+        sql = "SELECT CID FROM Customers WHERE Email = '" + email + "';"
+                "SELECT CID FROM Customers ORDER BY CID DESC LIMIT 1;";
+
+        nontransaction N1(C1); // Create a non-transactional object
+        result R(N1.exec(sql)); // Get the result of the query
+
+        new_cid = R.at(0)["cid"].as<int>() + 1;
+
+        if (R.size() == 0)
+        {
+            cout << "There is already an account associated with this e-mail." << endl
+                 << "Please login or enter a new e-mail.";
+            exists = 1;
+        }
+
+    } while (exists);
+
+    cout << "Enter your first name: ";
+    getline(cin, first);
+    cout << "Enter your last name: ";
+    getline(cin, last);
+    cout << "Enter your new street address: ";
+    getline(cin, street);
+    cout << "Enter your new city: ";
+    getline(cin, city);
+    cout << "Enter your new state: ";
+    getline(cin, state);
+    cout << "Enter your new zipcode: ";
+    getline(cin, zip);
+    cout << "Enter your new birthday year (YYYY): ";
+    getline(cin, year);
+    cout << "Enter your new birthday month (MM): ";
+    getline(cin, month);
+    cout << "Enter your new birthday day (DD): ";
+    getline(cin, day);
+    cout << "Enter your password: ";
+    getline(cin, password);
+    cout << "Confirm your new password: ";
+    cin >> confirm; 
+
+    while (confirm != password) // Make sure that the confirmation matches
+    {
+        cout << "Password does not match. Please confirm your new password." << endl
+             << "Confirm your new password: ";
+        cin >> confirm;
+    }
+
+    sql = "SELECT CURRENT_DATE;";
+
+    nontransaction N2(C2); // Create a non-transactional object
+    result R(N2.exec(sql)); // Get the result of the query
+
+    confirm = R.at(0)["current_date"].as<string>();
+
+    sql = "INSERT INTO Customers(CID, Email, Password, CName, Created, Address, DOB)"
+            "VALUES (" + to_string(new_cid) + ", '" + email + "', '" + password + "', '" + first + " " + last + "', '"
+            + confirm + "', '" + street + " " + city + ", " + state + " " + zip + "', '" 
+            + year + "-" + month + "-" + day + "');";
+
+    work W1(C); // Create a transactional object
+    W1.exec(sql);
+    W1.commit();
+
+    cout << endl << "You have successfully created an account!" << endl <<
+                    "Redirecting you to the customer login page." << endl << endl;
+
+    C.disconnect();
+    C1.disconnect();
+    C2.disconnect();
+    User customer;
+    customer.loginPage(db);
+}
+
 void User::loginPage(string db)
 {
     string connect = "dbname = " + db + " user = movie_customer password = password hostaddr = 127.0.0.1 port = 5432";
@@ -24,7 +115,7 @@ void User::loginPage(string db)
     do // Check if the customer is in the database
     {
         // Create SQL statement to get the tuple with the given email and password
-        sql = "SELECT * FROM Customers WHERE Email = '" + email + "' AND Password = '" + pass + "';";
+        sql = "SELECT CID FROM Customers WHERE Email = '" + email + "' AND Password = '" + pass + "';";
         
         nontransaction N1(C); // Create a non-transactional object
         result R(N1.exec(sql)); // Get the result of the query
@@ -56,7 +147,8 @@ void User::loginPage(string db)
                     break;
                 }
                 case 2:
-                    // Call a Main function
+                    Main guest;
+                    guest.createAccount(db);
                     return; 
                 case 3:
                     return;
@@ -120,14 +212,15 @@ void User::userMenu(connection& C)
                 function.viewCart(C, cid);
                 break;}
             case 4:
-                viewAccount(C);
+                if (viewAccount(C) == -1)
+                    option = -1;
                 break;
             case 5:
                 option = -1;
                 break;
             default:
-                option =-1;
-                        break;
+                cout << "Please select a valid option." << endl;
+                break;
         }
 
     }while(option!=-1);
@@ -177,7 +270,7 @@ void User::viewOrders(connection& C)
     } while (option != 1);
 }
 
-void User::viewAccount(connection& C)
+int User::viewAccount(connection& C)
 {
     int option;
 
@@ -220,10 +313,11 @@ void User::viewAccount(connection& C)
         switch(option)
         {
             case 1:
-                return;
+                return 0;
                 break;
             case 2:
-                updateAccountInfo(C);
+                if(updateAccountInfo(C) == -1)
+                    return -1;
                 break;
             default:
                 cout << "Please select a valid option." << endl;
@@ -234,7 +328,7 @@ void User::viewAccount(connection& C)
 
 }
 
-void User::updateAccountInfo(connection& C)
+int User::updateAccountInfo(connection& C)
 {
     string connect = "dbname = " + database + " user = movie_customer password = password hostaddr = 127.0.0.1 port = 5432";
     connection C1(connect); // Create new connections so that another nontransaction can be used
@@ -271,8 +365,7 @@ void User::updateAccountInfo(connection& C)
                 {
                     C1.disconnect();
                     C2.disconnect();
-                    C.disconnect();
-                    return; 
+                    return -1; 
                 }
                 
                 break;
@@ -287,7 +380,7 @@ void User::updateAccountInfo(connection& C)
                 changeBirthday(C1, C2);
                 break;
             case 6:
-                return;
+                return 0;
             default:
                 cout << "Please select a valid option." << endl;
                 break;
@@ -297,6 +390,7 @@ void User::updateAccountInfo(connection& C)
 
     C1.disconnect();
     C2.disconnect();
+    return 0;
 }
 
 void User::changeAddress(connection& C1, connection& C2)
@@ -458,28 +552,33 @@ void Admin::adminMenu(connection& C)
     
         switch(option)
         {
-            case 1:{
+            case 1:
+            {
                 functions function;
                 function.browseMovies(C);
                 //Update movies function
-                break;}
-            case 2:
-                viewAccount(C);
                 break;
-            case 3:{
-                addNewAdmin(C);
-                break;}
+            }
+            case 2:
+                if (viewAccount(C) == -1)
+                    option = -1;
+                break;
+            case 3:
+                if (addNewAdmin(C) == -1)
+                    option = -1;
+                break;
             case 4:
+                option = -1;
                 break;
             default:
                 cout << "Please select a valid option." << endl;
                 break;
         }
 
-    } while(option != 4);
+    } while(option != -1);
 }
 
-void Admin::viewAccount(connection& C)
+int Admin::viewAccount(connection& C)
 {
     int option;
 
@@ -519,21 +618,24 @@ void Admin::viewAccount(connection& C)
         switch(option)
         {
             case 1:
-                return;
+                option = -1;
                 break;
             case 2:
-                updateAccountInfo(C);
+                if (updateAccountInfo(C) == -1)
+                    return -1;
                 break;
             default:
                 cout << "Please select a valid option." << endl;
                 break;
         }
 
-    } while (option != 1 || option != 2);
+    } while (option != -1);
+
+    return 0;
 
 }
 
-void Admin::updateAccountInfo(connection& C)
+int Admin::updateAccountInfo(connection& C)
 {
     string connect = "dbname = " + database + " user = movie_admin password = admin123 hostaddr = 127.0.0.1 port = 5432";
     connection C1(connect); // Create new connections so that another nontransaction can be used
@@ -570,8 +672,7 @@ void Admin::updateAccountInfo(connection& C)
                 {
                     C1.disconnect();
                     C2.disconnect();
-                    C.disconnect();
-                    return; 
+                    return -1; 
                 }
                 
                 break;
@@ -580,19 +681,20 @@ void Admin::updateAccountInfo(connection& C)
                 u.changeName(C1, C2, "AdminView", "AName");
                 break;
             case 4:
-                return;
+                option = -1;
             default:
                 cout << "Please select a valid option." << endl;
                 break;
         }
 
-    } while(option != 4);
+    } while(option != -1);
 
     C1.disconnect();
     C2.disconnect();
+    return 0;
 }
 
-void Admin::addNewAdmin(connection& C)
+int Admin::addNewAdmin(connection& C)
 {
     string connect = "dbname = " + database + " user = movie_admin password = admin123 hostaddr = 127.0.0.1 port = 5432";
     connection C1(connect); // Create new connections so that another nontransaction can be used
@@ -619,8 +721,8 @@ void Admin::addNewAdmin(connection& C)
         cout << "Enter your password to confirm: "; // Prompt customer/admin to enter their current password 
         cin >> confirm;
 
-        // Create SQL statement to get the customer/admin's name (can retrieve any attibute, just not the password)
-        sql = "SELECT * FROM Admins WHERE AID = " + to_string(aid) + " AND Password = '" + confirm + "';";
+        // Create SQL statement to verify the admin's password
+        sql = "SELECT AID FROM Admins WHERE AID = " + to_string(aid) + " AND Password = '" + confirm + "';";
 
         nontransaction N1(C1); // Create a non-transactional object
         result R(N1.exec(sql)); // Get the result of the query
@@ -640,20 +742,20 @@ void Admin::addNewAdmin(connection& C)
     {
         cout << "Too many invalid login attempts. You will be disconnected." << endl;
         C1.disconnect();
-        C2.disconnect();
-        C.disconnect();       
-        return;
+        C2.disconnect();       
+        return -1;
     }
 
+    // Create SQL statement to get the largest AID
     sql = "SELECT AID FROM Admins ORDER BY AID DESC LIMIT 1;";
 
     nontransaction N2(C2); // Create a non-transactional object
     result R(N2.exec(sql)); // Get the result of the query
 
-    int new_aid = R.at(0)["aid"].as<int>() + 1;
+    int new_aid = R.at(0)["aid"].as<int>() + 1; // The new AID is now the AID after the largest AID
 
     sql = "INSERT INTO ADMINS (AID, Email, Password, AName)"
-            "VALUES (" + to_string(new_aid) +  ", '" + email + "', '" + password + "', '" + first + last + "');";
+            "VALUES (" + to_string(new_aid) +  ", '" + email + "', '" + password + "', '" + first + " " + last + "');";
     
     work W1(C); // Create a transactional object
     W1.exec(sql);
@@ -661,6 +763,7 @@ void Admin::addNewAdmin(connection& C)
 
     C1.disconnect();
     C2.disconnect();
+    return 0;
 }
 
 void Utility::changeEmail(connection& C1, connection& C2, string view)
@@ -701,8 +804,8 @@ bool Utility::changePassword(connection& C1, connection& C2, string view)
         cout << "Enter your current password: "; // Prompt customer/admin to enter their current password 
         cin >> curr;
 
-        // Create SQL statement to get the customer/admin's name (can retrieve any attibute, just not the password)
-        sql = "SELECT * FROM " + view + " WHERE Password = '" + curr + "';";
+        // Create SQL statement to get the customer/admin's email (can retrieve any attibute, just not the password)
+        sql = "SELECT Email FROM " + view + " WHERE Password = '" + curr + "';";
 
         nontransaction N1(C1); // Create a non-transactional object
         result R(N1.exec(sql)); // Get the result of the query

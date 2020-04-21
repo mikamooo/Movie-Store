@@ -52,6 +52,10 @@ int main()
                     option =-1;
                     break;
                 }
+                case 2:
+                    Main guest;
+                    guest.createAccount(db);
+                    break;
                 case 3:
                 {functions function;
                     function.browseMovies(C);
