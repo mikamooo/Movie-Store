@@ -99,7 +99,7 @@ int main()
                         "DROP USER IF EXISTS movie_admin;"
                         "CREATE USER movie_admin WITH PASSWORD 'admin123';"
                         "GRANT SELECT, UPDATE, DELETE, INSERT ON TABLE Movies TO movie_admin;"
-                        "GRANT SELECT, UPDATE ON TABLE Admins TO movie_admin";
+                        "GRANT SELECT, UPDATE, INSERT ON TABLE Admins TO movie_admin";
 
         work W1(C); // Create a transactional object
         W1.exec(tables);
@@ -354,9 +354,7 @@ int main()
         insert = "INSERT INTO Admins(AID, Email, Password, AName)"
                     "VALUES (1110, 'mikam@usf.edu', 'Admin1!', 'Mika Morrisson');"
                 "INSERT INTO Admins(AID, Email, Password, AName)"
-                    "VALUES (1111, 'justinr@usf.edu', 'Admin2!', 'Justin Rodney');"
-                "INSERT INTO Admins(AID, Email, Password, AName)"
-                    "VALUES (1112, 'wilsonp@usf.edu', 'Admin3!', 'Wilson Pinales Tejeda');";
+                    "VALUES (1111, 'justinr@usf.edu', 'Admin2!', 'Justin Rodney');";
         
         work W5(C); // Create a transactional object
         W5.exec(insert);

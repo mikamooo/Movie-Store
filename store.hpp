@@ -37,6 +37,7 @@ class Admin
         void adminMenu(connection&);
         void viewAccount(connection&);
         void updateAccountInfo(connection&);
+        void addNewAdmin(connection&);
         void updateMovies();
 };
 

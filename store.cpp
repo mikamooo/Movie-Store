@@ -267,9 +267,7 @@ void User::updateAccountInfo(connection& C)
                 break;
             case 2:
             {
-                valid = u.changePassword(C1, C2, "CustomerView");
-
-                if (!valid) // If the user enters an invalid current password too many times, disconnect
+                if (!u.changePassword(C1, C2, "CustomerView")) // If the user enters an invalid current password too many times, disconnect
                 {
                     C1.disconnect();
                     C2.disconnect();
@@ -469,7 +467,7 @@ void Admin::adminMenu(connection& C)
                 viewAccount(C);
                 break;
             case 3:{
-                // Function to add an admin
+                addNewAdmin(C);
                 break;}
             case 4:
                 break;
@@ -594,6 +592,77 @@ void Admin::updateAccountInfo(connection& C)
     C2.disconnect();
 }
 
+void Admin::addNewAdmin(connection& C)
+{
+    string connect = "dbname = " + database + " user = movie_admin password = admin123 hostaddr = 127.0.0.1 port = 5432";
+    connection C1(connect); // Create new connections so that another nontransaction can be used
+    connection C2(connect);
+
+    string email, password, first, last, sql, confirm;
+    int tries = 3;
+    bool valid;
+
+    cout << "Enter the new administrator's e-mail: ";
+    cin >> email;
+    cout << "Enter the new administrators's password: ";
+    cin >> password;
+    cout << "Enter the new administrator's first name: ";
+    cin >> first;
+    cout << "Enter the new administrator's last name: ";
+    cin >> last;
+    
+    do
+    {
+        if (tries == 0) // Once the user has run out of attempts, stop giving them chances
+            break;
+
+        cout << "Enter your password to confirm: "; // Prompt customer/admin to enter their current password 
+        cin >> confirm;
+
+        // Create SQL statement to get the customer/admin's name (can retrieve any attibute, just not the password)
+        sql = "SELECT * FROM Admins WHERE AID = " + to_string(aid) + " AND Password = '" + confirm + "';";
+
+        nontransaction N1(C1); // Create a non-transactional object
+        result R(N1.exec(sql)); // Get the result of the query
+
+        if (R.size() == 0) // Check that a tuple was returned
+        {
+            cout << "Invalid password." << endl; // If not, let the customer/admin try again
+            valid = false;
+            tries--;
+        }
+        else
+            valid = true;
+
+    } while(!valid); 
+                
+    if (tries == 0 && valid == false) // If the customer/admin used up all their attempts, disconnect
+    {
+        cout << "Too many invalid login attempts. You will be disconnected." << endl;
+        C1.disconnect();
+        C2.disconnect();
+        C.disconnect();       
+        return;
+    }
+
+    sql = "SELECT AID FROM Admins ORDER BY AID DESC LIMIT 1;";
+
+    nontransaction N2(C2); // Create a non-transactional object
+    result R(N2.exec(sql)); // Get the result of the query
+
+    int new_aid = R.at(0)["aid"].as<int>() + 1;
+
+    sql = "INSERT INTO ADMINS (AID, Email, Password, AName)"
+            "VALUES (" + to_string(new_aid) +  ", '" + email + "', '" + password + "', '" + first + last + "');";
+    
+    work W1(C); // Create a transactional object
+    W1.exec(sql);
+    W1.commit();
+
+    C1.disconnect();
+    C2.disconnect();
+}
+
 void Utility::changeEmail(connection& C1, connection& C2, string view)
 {
     // Create SQL statement to get the current email
@@ -637,7 +706,6 @@ bool Utility::changePassword(connection& C1, connection& C2, string view)
 
         nontransaction N1(C1); // Create a non-transactional object
         result R(N1.exec(sql)); // Get the result of the query
-        result::const_iterator c = R.begin(); 
 
         if (R.size() == 0) // Check that a tuple was returned
         {
