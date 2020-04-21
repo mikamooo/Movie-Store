@@ -91,7 +91,7 @@ int main()
                         
                         "DROP USER IF EXISTS movie_customer;"
                         "CREATE USER movie_customer WITH PASSWORD 'password';"
-                        "GRANT SELECT ON TABLE Movies TO movie_customer;"
+                        "GRANT SELECT,UPDATE ON TABLE Movies TO movie_customer;"
                         "GRANT SELECT, INSERT ON TABLE Orders TO movie_customer;"
                         "GRANT SELECT, UPDATE ON TABLE Customers TO movie_customer;"
                         "GRANT SELECT, INSERT, UPDATE ON TABLE Cart TO movie_customer;"
@@ -359,6 +359,23 @@ int main()
         work W5(C); // Create a transactional object
         W5.exec(insert);
         W5.commit();
+
+        insert = "CREATE OR REPLACE FUNCTION updateMovCart() RETURNS TRIGGER AS $$"
+                    "BEGIN"
+                        " UPDATE movies SET qty= movies.qty - ord.qty FROM"
+                        "(SELECT mid, qty, cid FROM cart NATURAL JOIN"
+                        " (SELECT * FROM orders ORDER BY oid DESC LIMIT 1) as t) AS ord WHERE movies.mid =ord.mid;"
+                        " UPDATE cart SET qty= 0 WHERE cid IN (SELECT cid FROM orders ORDER BY oid DESC LIMIT 1);"
+                        "RETURN NULL;"
+                    " END;"
+                    "$$ LANGUAGE PLPGSQL;"
+                    "CREATE TRIGGER ex_order"
+                    " AFTER INSERT ON orders"
+                    " EXECUTE PROCEDURE updateMovCart();";
+        
+        work W6(C); // Create a transactional object
+        W6.exec(insert);
+        W6.commit();
 
         C.disconnect(); // Disconnect from the database
 

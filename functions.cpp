@@ -172,7 +172,8 @@ int functions::selectMovie(connection &C, int user)
                     select = -1;
                     break;
                     }
-                cout <<res->at(select-1)["title"] <<endl <<"Synopsis: "<<res->at(select-1)["des"]  <<endl;
+                cout <<res->at(select-1)["title"] <<"\t\tQuantity: "<<res->at(select-1)["qty"] 
+                <<endl <<"Synopsis: "<<res->at(select-1)["des"]  <<endl;
                 if(user ==1){
                     cout << "Would you like to add this movie to your cart?"<<endl
                         <<"1)Yes"<<endl
