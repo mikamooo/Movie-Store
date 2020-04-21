@@ -20,6 +20,7 @@ class User
         void loginPage(string); 
         void userMenu(connection&);
         void checkOut();
+        void placeOrder(connection&);
         void viewOrders(connection&);
         int viewAccount(connection&);
         int updateAccountInfo(connection&);

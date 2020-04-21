@@ -224,14 +224,14 @@ void functions::addToCart(connection &C, int cid, int num)
 }
 
 void functions::viewCart(connection &C, int CID){
-string sql = "SELECT title, qty2, price FROM movies NATURAL JOIN (SELECT cid, mid, qty as qty2 FROM cart) as cart2 WHERE cid = " +to_string(CID)+";";   
+string sql = "SELECT title, qty2, (movies.price*cart2.qty2) as price FROM movies NATURAL JOIN (SELECT cid, mid, qty as qty2 FROM cart) as cart2 WHERE cid = " +to_string(CID)+";";   
 nontransaction N1(C); // Create a non-transactional object
 
 result *R = new result(N1.exec(sql)); // Get the result of the query
 int i = 1;
 for(auto row : *R)
-{
-    cout << i<< ". " << row["title"] << "\t" << row["qty2"]<< "\t$" << row["price"]<< endl;
+{int qty = row["qty2"].as<int>();
+    cout << i<< ". " << row["title"] << "\t" << qty<< "\t$" <<row["price"]<< endl;
     i++;
 }
 cout <<endl;
@@ -265,7 +265,7 @@ cout << "Enter the title of the movie: " <<endl;
 cin.ignore();
 getline(cin, option);
 //cin >> option; cin.clear();
-string sql = "SELECT * FROM movies WHERE title like'%"+option+"%';";   
+string sql = "SELECT * FROM movies WHERE title ilike'%"+option+"%';";   
 nontransaction N1(C); // Create a non-transactional object
 result *R = new result(N1.exec(sql)); // Get the result of the query
 

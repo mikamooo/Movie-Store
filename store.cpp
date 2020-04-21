@@ -210,6 +210,7 @@ void User::userMenu(connection& C)
             case 3:{
                 functions function;
                 function.viewCart(C, cid);
+                placeOrder(C);
                 break;}
             case 4:
                 if (viewAccount(C) == -1)
@@ -247,7 +248,15 @@ void User::viewOrders(connection& C)
     {
         cout << "Order Number: " << c[0].as<string>() << endl;
         cout << "Date Received: " << c[1].as<string>() << endl;
-        cout << "Date Shipped: " << c[2].as<string>() << endl;
+        try
+        {
+            cout << "Date Shipped: " << c[2].as<string>() << endl;
+        }
+        catch(const std::exception& e)
+        {
+            cout<< "N/A"<<endl;
+        }
+        
         cout << "Shipping Address: " << c[3].as<string>() << endl;
         cout << "Order Status: " << c[4].as<string>() << endl << endl;
     } 
@@ -327,7 +336,50 @@ int User::viewAccount(connection& C)
     } while (option != 1 || option != 2);
 
 }
+void User::placeOrder(connection& C)
+{
+cout <<"Would you like to place an order?"<<endl
+        <<"1)Yes"<<endl
+        <<"2)No"<<endl;
+int option;
+cin >>option;
+if(option!=1)
+    return;
+string sql = "SELECT MAX(OID) as OID FROM orders;";
 
+            
+nontransaction N1(C); // Create a non-transactional object
+result R(N1.exec(sql)); // Get the result of the query
+
+int newID = R.at(0)["OID"].as<int>()+1;
+string address;
+
+cout << "Would you like this shipped to your home address?" <<endl
+        <<"1)Yes"<<endl
+        <<"2)No"<<endl;
+cin>>option;
+if(option!=1)
+    {cout <<"Enter the address you would like this to be shipped to"<<endl; 
+    cin.ignore(); getline(cin,address);}
+else
+{sql = "SELECT address FROM customers WHERE CID="+to_string(cid)+";";
+result R(N1.exec(sql)); // Get the result of the query
+
+address= R.at(0)["address"].as<string>();
+}
+N1.commit();
+
+
+
+sql ="INSERT INTO Orders(OID, CID, Received, Shipped, Address, Status)"
+            "VALUES("+to_string(newID) +","+to_string(cid)+", CURRENT_DATE, NULL, '"+address+"', 'In Progress');";
+work W1(C); // Create a transactional object
+W1.exec(sql);
+W1.commit();
+return;
+
+
+}
 int User::updateAccountInfo(connection& C)
 {
     string connect = "dbname = " + database + " user = movie_customer password = password hostaddr = 127.0.0.1 port = 5432";
