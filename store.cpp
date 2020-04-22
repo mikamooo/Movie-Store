@@ -377,6 +377,7 @@ int User::viewAccount(connection& C)
     } while (option != 1 || option != 2);
 
 }
+
 void User::placeOrder(connection& C)
 {
 cout <<"Would you like to place an order?"<<endl
@@ -689,7 +690,7 @@ void Admin::adminMenu(connection& C)
              << "*                                                                     *" << endl
              << "*                     Please select an option.                        *" << endl
              << "***********************************************************************" << endl << endl
-             << "1) Browse for movies" << endl
+             << "1) Update movie catalog" << endl
              << "2) View your information" << endl
              << "3) Add a new administrator" << endl
              << "4) Log Out" << endl;
@@ -700,9 +701,7 @@ void Admin::adminMenu(connection& C)
         {
             case 1:
             {
-                functions function;
-                function.browseMovies(C);
-                //Update movies function
+                updateMovieMenu(C);
                 break;
             }
             case 2:
@@ -722,6 +721,211 @@ void Admin::adminMenu(connection& C)
         }
 
     } while(option != -1);
+}
+
+void Admin::updateMovieMenu(connection& C)
+{
+    int option, add;
+
+    do
+    {
+        cout << "***********************************************************************" << endl
+            << "*                       Update Movie Catalog                          *" << endl
+            << "*                                                                     *" << endl
+            << "*                      Please select an option.                       *" << endl
+            << "***********************************************************************" << endl << endl
+            << "1) Update an existing movie" << endl
+            << "2) Add a new movie" << endl
+            << "3) Return to admin menu" << endl;
+            cin >> option;
+
+        switch(option)
+        {
+            case 1:
+                updateMovies(C);
+                break;
+            case 2:
+            {
+                addMovies(C);
+
+                do
+                {
+                    cout << endl << "Would you like to add another movie?" << endl
+                    << "1) Yes" << endl << "2) No" << endl;
+                    cin >> add;
+
+                    switch (add)
+                    {
+                        case 1:
+                            addMovies(C);
+                            break;
+                        case 2:
+                            add = -1;
+                            break;
+                        default:
+                            cout << "Please select a valid option." << endl;
+                            break;
+                    }
+
+                } while (add != -1);
+
+                break;
+            }
+            case 3:
+                option = -1;
+                break;
+            default:
+                cout << "Please select a valid option." << endl;
+                break;
+        }
+
+    } while (option != -1);
+
+}
+
+void Admin::updateMovies(connection& C)
+{
+    functions function;
+    function.browseMovies(C);
+    int select = function.selectMovie(C,1);
+
+}
+
+void Admin::addMovies(connection& C)
+{
+    string connect = "dbname = " + database + " user = movie_admin password = admin123 hostaddr = 127.0.0.1 port = 5432";
+    connection C1(connect);
+
+    string title, genre, year, month, day, qty, price, rating, des, sql, select;
+    int option = 0, new_mid;
+
+    getline(cin, title); // Get the newline character after selecting an option first
+
+    cout << "Enter the title of the movie: ";
+    getline(cin, title);
+    cout << "Please select the genre for this movie." << endl
+            << "1) Comedy" << endl
+            << "2) Drama" << endl
+            << "3) Horror" << endl
+            << "4) Sci-Fi" << endl
+            << "5) Animation" << endl
+            << "6) Fantasy" << endl
+            << "7) Crime" << endl
+            << "8) Mystery" << endl;
+
+    do
+    {
+        getline(cin, select);
+
+        switch (stoi(select))
+        {
+            case 1:
+                genre = "Comedy";
+                option = -1;
+                break;
+            case 2:
+                genre = "Drama";
+                option = -1;
+                break;
+            case 3:
+                genre = "Horror";
+                option = -1;
+                break;
+            case 4:
+                genre = "Sci-Fi";
+                option = -1;
+                break;
+            case 5:
+                genre = "Animation";
+                option = -1;
+                break;
+            case 6:
+                genre = "Fantasy";
+                option = -1;
+                break;
+            case 7:
+                genre = "Crime";
+                option = -1;
+                break;
+            case 8:
+                genre = "Mystery";
+                option = -1;
+                break;
+            default:
+                cout << "Please select a valid option." << endl;
+                break;
+        }
+
+    } while(option != -1);
+
+    cout << "Enter the year the movie was released (YYYY): ";
+    getline(cin, year);
+    cout << "Enter the month the movie was released (MM): ";
+    getline(cin, month);
+    cout << "Enter the day the movie was released (DD): ";
+    getline(cin, day);
+    cout << "Enter the quantity for this movie: ";
+    getline(cin, qty);
+    cout << "Enter the price for this movie: $";
+    getline(cin, price);
+    cout << "Please select the rating for this movie." << endl
+            << "1) NR (Not rated)" << endl
+            << "2) G" << endl
+            << "3) PG" << endl
+            << "4) PG-13" << endl
+            << "5) R" << endl;
+    option = 0;
+    do
+    {
+        getline(cin, select);
+
+        switch (stoi(select))
+        {
+            case 1:
+                rating = "NR";
+                option = -1;
+                break;
+            case 2:
+                rating = "G";
+                option = -1;
+                break;
+            case 3:
+                rating = "PG";
+                option = -1;
+                break;
+            case 4:
+                rating = "PG-13";
+                option = -1;
+                break;
+            case 5:
+                rating = "R";
+                option = -1;
+                break;
+            default:
+                cout << "Please select a valid option." << endl;
+                break;
+        }
+
+    } while(option != -1);
+
+    cout << "Enter the sypnopsis for this movie: " << endl;
+    getline(cin, des);
+
+    sql = "SELECT MID FROM Movies ORDER BY MID DESC LIMIT 1";
+    nontransaction N1(C1); // Create a non-transactional object
+    result R(N1.exec(sql)); // Get the result of the query
+
+    new_mid = R.at(0)["mid"].as<int>() + 1;
+
+    sql = "INSERT INTO Movies(MID, Title, Genre, Year, Qty, Price, Rating, Des)"
+            "VALUES(" + to_string(new_mid) + ", '" + title + "', '" + genre + "', '" 
+            + year + "-" + month + "-" + day + "', " + qty + ", " + price + ", '" + rating + "', '" + des + "');";
+
+    work W1(C); // Create a transactional object
+        W1.exec(sql);
+        W1.commit();
+    
+    C1.disconnect();
 }
 
 int Admin::viewAccount(connection& C)
@@ -757,7 +961,7 @@ int Admin::viewAccount(connection& C)
             cout << "E-mail: " << c[0].as<string>() << endl << endl;
         }
 
-        cout << "1) Return to user menu" << endl // Prompt the admin to return to the admin menu or update their info
+        cout << "1) Return to admin menu" << endl // Prompt the admin to return to the admin menu or update their info
              << "2) Update account info" << endl; 
         cin >> option;
 

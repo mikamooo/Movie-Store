@@ -55,6 +55,7 @@ int main()
                 case 2:
                     Main guest;
                     guest.createAccount(db);
+                    option = -1;
                     break;
                 case 3:
                 {functions function;

@@ -40,7 +40,10 @@ class Admin
         int viewAccount(connection&);
         int updateAccountInfo(connection&);
         int addNewAdmin(connection&);
-        void updateMovies();
+        void updateMovieMenu(connection&);
+        void updateMovies(connection&);
+        void addMovies(connection&);
+        
 };
 
 class Utility
