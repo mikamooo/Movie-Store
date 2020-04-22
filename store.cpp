@@ -209,8 +209,10 @@ void User::userMenu(connection& C)
                 break;
             case 3:{
                 functions function;
-                function.viewCart(C, cid);
-                placeOrder(C);
+                if(function.viewCart(C, cid))
+                    placeOrder(C);
+                else
+                    {cout<<"Your Cart is Empty!\n"<<endl;}
                 break;}
             case 4:
                 if (viewAccount(C) == -1)
@@ -260,15 +262,19 @@ void User::viewOrders(connection& C)
         cout << "Shipping Address: " << c[3].as<string>() << endl;
         cout << "Order Status: " << c[4].as<string>() << endl << endl;
     } 
-
+    N1.commit();
     do
     {
-        cout << "1) Return to user menu" << endl; // Prompt the customer to return to the user menu
+        cout << "1)View More"<<endl
+                <<"2)Return to user menu" << endl; // Prompt the customer to return to the user menu
         cin >> option;
 
         switch(option)
         {
             case 1:
+                viewAllOrders(C);
+                break;
+            case 2:
                 return;
                 break;
             default:
@@ -277,6 +283,41 @@ void User::viewOrders(connection& C)
         }
 
     } while (option != 1);
+}
+
+void User::viewAllOrders(connection &C){
+string sql = "SELECT title, qty2, (movies.price*cart2.qty2) as price,Received,Shipped,oid,address FROM movies NATURAL JOIN "
+"(SELECT cid, mid, qty as qty2,Received,Shipped,OID,address FROM cart NATURAL JOIN orders "
+"WHERE cid = " +to_string(cid)+" AND OID IS NOT NULL) as cart2 " 
+"ORDER BY OID;";   
+nontransaction N1(C); // Create a non-transactional object
+
+result *R = new result(N1.exec(sql)); // Get the result of the query
+int i = 1;
+int oid = -1;
+for(auto row : *R)
+{int qty = row["qty2"].as<int>(); 
+
+if(oid !=row["oid"].as<int>())
+    {
+    oid = row["oid"].as<int>();
+    try{
+            cout <<endl<<endl<<"Order# "<<row["oid"]<<endl;
+            cout <<"Date Order Placed: "<<row["received"]<<endl;
+            cout <<"Date Shipped: "<<row["shipped"].as<string>()<<endl;
+        }
+    catch(const std::exception& e)
+        {
+        cout<< "N/A" <<endl;
+        }
+    }
+
+    cout << row["title"] << "\t" << qty<< "\t$" <<row["price"] <<"\t"<< endl;
+    
+}
+cout <<endl;
+delete R;
+return;
 }
 
 int User::viewAccount(connection& C)
@@ -345,13 +386,65 @@ int option;
 cin >>option;
 if(option!=1)
     return;
-string sql = "SELECT MAX(OID) as OID FROM orders;";
+string sql = "SELECT * FROM movies NATURAL JOIN(SELECT mid,cid,qty as qty2 FROM cart WHERE oid = -1 AND cid" 
+            "= "+to_string(cid)+") as cart WHERE cart.qty2>movies.qty;";
+nontransaction N0(C); // Create a non-transactional object
+result R0(N0.exec(sql)); // Get the result of the query
+N0.commit();
+for (auto row : R0)
+    {
+    if(row["qty"].as<int>()<=0)
+        {cout << "Sorry, Looks like we ran out of "<<row["title"]<<". We have removed\nit from your cart!"<<endl;
+            sql = "DELETE FROM cart WHERE cid= "+to_string(cid)
+            +" AND oid=-1 and mid = '"+row["mid"].as<string>() +"';";
+        work W1(C); // Create a transactional object
+        W1.exec(sql);
+        W1.commit();
+        continue;}
+    
+    cout<<"You have more copies of "<<row["title"]<<" in your cart than we have in stock.\n"
+    "would you like to purchase " <<row["qty"] <<" copies or remove them from your cart?"
+    "\n1)Purchase " <<row["qty"] <<" copies"<<endl
+    <<"2) Remove all from cart"<<endl;
+    cin>>option;
+    switch (option)
+    {
+    case 1:
+         {
+        sql = "UPDATE cart SET qty = movies.qty FROM "
+            "movies NATURAL JOIN (SELECT mid,cid,oid,qty as qty2 FROM cart) AS c2 WHERE cart.cid= "
+            +to_string(cid)+" AND cart.oid=-1 and movies.title = '"+row["title"].as<string>() +"';";
+        work W1(C); // Create a transactional object
+        W1.exec(sql);
+        W1.commit();
+        break;}
+    case 2:
+        {sql = "DELETE FROM cart WHERE cid= "+to_string(cid)
+            +" AND oid=-1 and mid = '"+row["mid"].as<string>() +"';";
+        work W1(C); // Create a transactional object
+        W1.exec(sql);
+        W1.commit();
+        break;}
+    default:
+        break;
+    }
 
-            
+        
+    }
+N0.commit();
+sql= "SELECT MAX(OID) as OID FROM orders;";
+   
 nontransaction N1(C); // Create a non-transactional object
 result R(N1.exec(sql)); // Get the result of the query
 
 int newID = R.at(0)["OID"].as<int>()+1;
+
+sql = "SELECT * FROM cart WHERE CID="+to_string(cid)+"AND oid=-1;";
+result R2(N1.exec(sql)); // Get the result of the query
+if(R2.size()<1)
+    {cout << "It looks like everything has been removed from your cart"<<endl;
+    return;}
+
 string address;
 
 cout << "Would you like this shipped to your home address?" <<endl
@@ -367,6 +460,7 @@ result R(N1.exec(sql)); // Get the result of the query
 
 address= R.at(0)["address"].as<string>();
 }
+
 N1.commit();
 
 

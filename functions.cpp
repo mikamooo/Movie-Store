@@ -210,10 +210,28 @@ int functions::selectMovie(connection &C, int user)
 
 void functions::addToCart(connection &C, int cid, int num)
 {
-            if(res ==nullptr || num <1 || num >res->size())//if there is no
+        if(res ==nullptr || num <1 || num >res->size())//if there is no
                     {cout << "Sorry! We experienced some technical difficulties"<<endl;
-                    return;
+            return;
+            }
+            if(res->at(num-1)["qty"].as<int>()<=0)
+                {cout << "Sorry! We dont have that item in stock."<<endl;
+                return;
+                }
+           string sql = "SELECT qty FROM cart WHERE cid = " +to_string(cid)+" AND OID =-1 AND " 
+                        "mid ="+res->at(num-1)["mid"].as<string>() +";";   
+           nontransaction N1(C); // Create a non-transactional object
+
+            result *R = new result(N1.exec(sql)); // Get the result of the query
+            N1.commit();
+            if(R->size()>0)
+                if(R->at(0)["qty"].as<int>() >=res->at(num-1)["qty"].as<int>())
+                    {cout << "It looks like you already have all these in your cart!"<<endl
+                            << "Try checking out!"<<endl;
+                            return;
                     }
+                
+
             string insert = "INSERT INTO CART(CID, mid, qty)"
                         "VALUES ("+to_string(cid) +',' +res->at(num-1)["mid"].as<string>()+",1)"
                         "ON CONFLICT ON CONSTRAINT cart_pk DO UPDATE SET qty = CART.qty + 1;";
@@ -224,8 +242,9 @@ void functions::addToCart(connection &C, int cid, int num)
     return;
 }
 
-void functions::viewCart(connection &C, int CID){
-string sql = "SELECT title, qty2, (movies.price*cart2.qty2) as price FROM movies NATURAL JOIN (SELECT cid, mid, qty as qty2 FROM cart) as cart2 WHERE cid = " +to_string(CID)+";";   
+int functions::viewCart(connection &C, int CID){
+string sql = "SELECT title, qty2, (movies.price*cart2.qty2) as price FROM movies NATURAL JOIN "
+"(SELECT cid, mid, qty as qty2 FROM cart WHERE cid = " +to_string(CID)+" AND OID =-1) as cart2;";   
 nontransaction N1(C); // Create a non-transactional object
 
 result *R = new result(N1.exec(sql)); // Get the result of the query
@@ -241,8 +260,9 @@ if(res!=nullptr)//if result is not null, delete current contents.
     delete res;
     }
 res = R;
-return;
-
+if(i>1)
+    return 1;
+return 0;
 }
 
 void functions::displayByPrice(connection &C)

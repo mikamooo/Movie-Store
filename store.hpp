@@ -22,6 +22,7 @@ class User
         void checkOut();
         void placeOrder(connection&);
         void viewOrders(connection&);
+        void viewAllOrders(connection&);
         int viewAccount(connection&);
         int updateAccountInfo(connection&);
         void changeAddress(connection&, connection&);

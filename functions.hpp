@@ -22,7 +22,7 @@ void displayByTitle(connection &C);
 void displayAllMoviesByGenre(connection &C, string genre);
 void genrePrompt(connection &C);
 void addToCart(connection &C, int cid, int num);
-void viewCart(connection &C, int cid);
+int viewCart(connection &C, int cid);
 };
 
 #endif
