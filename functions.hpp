@@ -16,6 +16,7 @@ functions();
 void browseMovies(connection &C);
 void browseMoviesUser(connection &C);
 int selectMovie(connection &C, int user =0);
+int selectAdmin(connection&C);
 void displayAllMovies(connection &C);
 void displayByPrice(connection &C);
 void displayByTitle(connection &C);

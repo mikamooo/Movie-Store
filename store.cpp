@@ -27,7 +27,7 @@ void Main::createAccount(string db)
 
         new_cid = R.at(0)["cid"].as<int>() + 1;
 
-        if (R.size() == 0)
+        if (R.size() != 0)
         {
             cout << "There is already an account associated with this e-mail." << endl
                  << "Please login or enter a new e-mail.";
@@ -785,25 +785,268 @@ void Admin::updateMovieMenu(connection& C)
 
 void Admin::updateMovies(connection& C)
 {
+    string connect = "dbname = " + database + " user = movie_admin password = admin123 hostaddr = 127.0.0.1 port = 5432";
+    connection C1(connect); // Create new connections so that a transactional can be used after a nontransactional
+    connection C2(connect);
+
     functions function;
     function.browseMovies(C);
-    int select = function.selectMovie(C,1);
+    int select = function.selectAdmin(C);
+    int option;
+    Utility u;
 
+    do
+    {
+        cout << endl << "Please select an update option." << endl
+            << "1) Update title" << endl
+            << "2) Update genre" << endl
+            << "3) Update year" << endl
+            << "4) Update quantity" << endl
+            << "5) Update price" << endl
+            << "6) Update rating" << endl
+            << "7) Update description" << endl
+            << "8) Return to update menu" << endl;
+        cin >> option;
+
+        switch(option)
+        {
+            case 1:
+                u.updateAttr(C, C1, C2, "title");
+                break;
+            case 2:
+                u.updateAttr(C, C1, C2, "genre");
+                break;
+            case 3:
+                u.updateAttr(C, C1, C2, "year");
+                break;
+            case 4:
+                u.updateAttr(C, C1, C2, "qty");
+                break;
+            case 5:
+                u.updateAttr(C, C1, C2, "price");
+                break;
+            case 6:
+                u.updateAttr(C, C1, C2, "rating");
+                break;
+            case 7:
+                u.updateAttr(C, C1, C2, "des");
+                break;
+            case 8:
+                return;
+                break;
+            default:
+                cout << "Please select a valid option." << endl;
+                break;
+        }
+        
+    } while(option != 8);
+
+}
+
+void Utility::updateAttr(connection& C, connection& C1, connection& C2, string attr)
+{
+    string sql, change, year, month, day, select;
+    int option = 0;
+    getline(cin, change); // Get the newline character from selecting an option
+
+    sql = "SELECT " + attr + " FROM UpdateView;";
+
+    nontransaction N(C1); // Create a non-transactional object
+    result R(N.exec(sql)); // Get the result of the query
+    result::const_iterator c = R.begin();
+
+    if (attr == "des")
+        cout << "The current " + attr + " of this movie is: " << endl << c[0].as<string>() << endl;
+    else
+        cout << "The current " + attr + " of this movie is: " << c[0].as<string>() << endl;
+
+    if (attr == "year")
+    {
+        cout << "Enter the new " + attr + " (YYYY): ";
+        getline(cin, year);
+        cout << "Enter the new month (MM): ";
+        getline(cin, month);
+        cout << "Enter the new month (DD): ";
+        getline(cin, day);
+        change = year + "-" + month + "-" + day;
+    }
+    else if (attr == "genre")
+    {
+        do // Get the genre of the movie
+        {
+            cout << "Please select the new genre." << endl
+                << "1) Comedy" << endl
+                << "2) Drama" << endl
+                << "3) Horror" << endl
+                << "4) Sci-Fi" << endl
+                << "5) Animation" << endl
+                << "6) Fantasy" << endl
+                << "7) Crime" << endl
+                << "8) Mystery" << endl;
+            getline(cin, select);
+
+            switch (stoi(select))
+            {
+                case 1:
+                    change = "Comedy";
+                    option = -1;
+                    break;
+                case 2:
+                    change = "Drama";
+                    option = -1;
+                    break;
+                case 3:
+                    change = "Horror";
+                    option = -1;
+                    break;
+                case 4:
+                    change = "Sci-Fi";
+                    option = -1;
+                    break;
+                case 5:
+                    change = "Animation";
+                    option = -1;
+                    break;
+                case 6:
+                    change = "Fantasy";
+                    option = -1;
+                    break;
+                case 7:
+                    change = "Crime";
+                    option = -1;
+                    break;
+                case 8:
+                    change = "Mystery";
+                    option = -1;
+                    break;
+                default:
+                    cout << "Please select a valid option." << endl;
+                    break;
+            }
+
+        } while(option != -1);
+    }
+    else if (attr == "rating")
+    {
+        do // Get the rating
+        {
+            cout << "Please select the new rating." << endl
+                << "1) NR (Not rated)" << endl
+                << "2) G" << endl
+                << "3) PG" << endl
+                << "4) PG-13" << endl
+                << "5) R" << endl;
+            option = 0;
+            getline(cin, select);
+
+            switch (stoi(select))
+            {
+                case 1:
+                    change = "NR";
+                    option = -1;
+                    break;
+                case 2:
+                    change = "G";
+                    option = -1;
+                    break;
+                case 3:
+                    change = "PG";
+                    option = -1;
+                    break;
+                case 4:
+                    change = "PG-13";
+                    option = -1;
+                    break;
+                case 5:
+                    change = "R";
+                    option = -1;
+                    break;
+                default:
+                    cout << "Please select a valid option." << endl;
+                    break;
+            }
+
+        } while(option != -1);
+    }
+    else
+    {
+        cout << "Enter the new " + attr + ": ";
+        getline(cin, change);
+    }
+
+    if (attr == "title")
+    {
+        // Create SQL statement to get the tuple with the given title
+        sql = "SELECT * FROM movies WHERE title ='" + change + "';";
+
+        nontransaction N1(C2); // Create a non-transactional object
+        result R1(N1.exec(sql)); // Get the result of the query
+
+        if (R1.size() != 0) // If a tuple with the given title exists, let the admin know
+        {
+            cout << endl << "This title already exists. " << endl;
+            return;
+        }
+    }
+
+    if (attr == "qty" || attr == "price")
+    {
+        sql = "UPDATE UpdateView SET " + attr + " = " + change + ";";
+    }
+    else
+        sql = "UPDATE UpdateView SET " + attr + " = '" + change + "';";
+
+    work W1(C); // Create a transactional object
+    W1.exec(sql);
+    W1.commit();
 }
 
 void Admin::addMovies(connection& C)
 {
     string connect = "dbname = " + database + " user = movie_admin password = admin123 hostaddr = 127.0.0.1 port = 5432";
-    connection C1(connect);
+    connection C1(connect); // Create new connections so that another nontransaction can be used
+    connection C2(connect);
 
     string title, genre, year, month, day, qty, price, rating, des, sql, select;
     int option = 0, new_mid;
 
     getline(cin, title); // Get the newline character after selecting an option first
 
-    cout << "Enter the title of the movie: ";
-    getline(cin, title);
-    cout << "Please select the genre for this movie." << endl
+    do // Get the title
+    {   
+        cout << "Enter the title of the movie: ";
+        getline(cin, title);
+
+        // Create SQL statement to get the tuple with the given title
+        sql = "SELECT * FROM movies WHERE title ilike'%" + title + "%';";
+
+        nontransaction N1(C1); // Create a non-transactional object
+        result R1(N1.exec(sql)); // Get the result of the query
+
+        if (R1.size() != 0) // If a tuple with the given title exists, let the admin know
+        {
+            cout << endl << "This title already exists. Please select an option to continue." << endl
+                << "1) Add a new movie" << endl
+                << "2) Update an existing movie" << endl;
+            getline(cin, select);
+
+            if (stoi(select) == 2) // If the admin chooses to update instead, redirect them 
+            {
+                updateMovies(C);
+                C1.disconnect();
+                C2.disconnect();
+                return;
+            }
+        }
+        else
+            option = -1;
+
+    } while(option != -1);
+    option = 0;
+    
+    do // Get the genre of the movie
+    {
+        cout << "Please select the genre for this movie." << endl
             << "1) Comedy" << endl
             << "2) Drama" << endl
             << "3) Horror" << endl
@@ -812,9 +1055,6 @@ void Admin::addMovies(connection& C)
             << "6) Fantasy" << endl
             << "7) Crime" << endl
             << "8) Mystery" << endl;
-
-    do
-    {
         getline(cin, select);
 
         switch (stoi(select))
@@ -868,15 +1108,16 @@ void Admin::addMovies(connection& C)
     getline(cin, qty);
     cout << "Enter the price for this movie: $";
     getline(cin, price);
-    cout << "Please select the rating for this movie." << endl
+
+    do // Get the rating
+    {
+        cout << "Please select the rating for this movie." << endl
             << "1) NR (Not rated)" << endl
             << "2) G" << endl
             << "3) PG" << endl
             << "4) PG-13" << endl
             << "5) R" << endl;
-    option = 0;
-    do
-    {
+        option = 0;
         getline(cin, select);
 
         switch (stoi(select))
@@ -911,21 +1152,24 @@ void Admin::addMovies(connection& C)
     cout << "Enter the sypnopsis for this movie: " << endl;
     getline(cin, des);
 
+    // Create SQL statement largest MID
     sql = "SELECT MID FROM Movies ORDER BY MID DESC LIMIT 1";
-    nontransaction N1(C1); // Create a non-transactional object
-    result R(N1.exec(sql)); // Get the result of the query
+    nontransaction N2(C2); // Create a non-transactional object
+    result R2(N2.exec(sql)); // Get the result of the query
 
-    new_mid = R.at(0)["mid"].as<int>() + 1;
+    new_mid = R2.at(0)["mid"].as<int>() + 1; // Make the new MID the MID after the largest one
 
+    // Create SQL statement to insert the new movie into the database
     sql = "INSERT INTO Movies(MID, Title, Genre, Year, Qty, Price, Rating, Des)"
             "VALUES(" + to_string(new_mid) + ", '" + title + "', '" + genre + "', '" 
             + year + "-" + month + "-" + day + "', " + qty + ", " + price + ", '" + rating + "', '" + des + "');";
 
     work W1(C); // Create a transactional object
-        W1.exec(sql);
-        W1.commit();
+    W1.exec(sql);
+    W1.commit();
     
     C1.disconnect();
+    C2.disconnect();
 }
 
 int Admin::viewAccount(connection& C)

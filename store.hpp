@@ -52,6 +52,7 @@ class Utility
         void changeEmail(connection&, connection&, string);
         bool changePassword(connection&, connection&, string);
         void changeName(connection&, connection&, string, string);
+        void updateAttr(connection&, connection&, connection&, string);
 };
 
 #endif

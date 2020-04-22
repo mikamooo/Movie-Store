@@ -335,3 +335,26 @@ for(auto row : *R)
 cout <<endl;
 return;
 }
+
+int functions::selectAdmin(connection &C)
+{
+    int option; int select = -1;
+    
+    cout << "Enter the number of the movie you would like to update." <<endl;
+    cin >> select;
+    if(res ==nullptr || select <1 || select >res->size())//if there is no
+    {   cout << "Sorry! We experienced some technical difficulties"<<endl;
+        return -1;
+    }
+
+    // Create SQL statement to create a view for the customer's account info
+    string sql = "DROP VIEW IF EXISTS UpdateView CASCADE;"
+                "CREATE VIEW UpdateView AS SELECT * FROM Movies WHERE Title ilike '%" 
+                + to_string(res->at(select-1)["title"]) + "%';";
+
+    work W1(C); // Create a transactional object
+    W1.exec(sql);
+    W1.commit();
+                
+    return select;
+}
