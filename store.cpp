@@ -844,22 +844,22 @@ void Admin::updateMovies(connection& C)
 }
 
 void Utility::updateAttr(connection& C, connection& C1, connection& C2, string attr)
-{
+{   
     string sql, change, year, month, day, select;
     int option = 0;
     getline(cin, change); // Get the newline character from selecting an option
-
+    
     sql = "SELECT " + attr + " FROM UpdateView;";
 
     nontransaction N(C1); // Create a non-transactional object
     result R(N.exec(sql)); // Get the result of the query
     result::const_iterator c = R.begin();
-
+    
     if (attr == "des")
         cout << "The current " + attr + " of this movie is: " << endl << c[0].as<string>() << endl;
     else
         cout << "The current " + attr + " of this movie is: " << c[0].as<string>() << endl;
-
+    
     if (attr == "year")
     {
         cout << "Enter the new " + attr + " (YYYY): ";
@@ -973,7 +973,7 @@ void Utility::updateAttr(connection& C, connection& C1, connection& C2, string a
         cout << "Enter the new " + attr + ": ";
         getline(cin, change);
     }
-
+    
     if (attr == "title")
     {
         // Create SQL statement to get the tuple with the given title

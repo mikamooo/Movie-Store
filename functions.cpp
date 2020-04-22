@@ -349,8 +349,8 @@ int functions::selectAdmin(connection &C)
 
     // Create SQL statement to create a view for the customer's account info
     string sql = "DROP VIEW IF EXISTS UpdateView CASCADE;"
-                "CREATE VIEW UpdateView AS SELECT * FROM Movies WHERE Title ilike '%" 
-                + to_string(res->at(select-1)["title"]) + "%';";
+                "CREATE VIEW UpdateView AS SELECT * FROM Movies WHERE MID =" 
+                + to_string(res->at(select-1)["mid"]) + ";";
 
     work W1(C); // Create a transactional object
     W1.exec(sql);
