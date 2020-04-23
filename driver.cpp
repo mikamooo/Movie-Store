@@ -36,7 +36,7 @@ int main()
                  << "*                    Please select an option.                         *" << endl
                  << "***********************************************************************" << endl << endl
                  << "1) Customer Login" << endl
-                 << "2) Create an Account" << endl
+                 << "2) Create an account" << endl
                  << "3) Browse for movies" << endl
                  << "4) Admin Login" << endl
                  << "5) Exit" << endl;
@@ -59,8 +59,8 @@ int main()
                     break;
                 case 3:
                 {functions function;
-                    function.browseMovies(C);
-                    function.selectMovie(C);
+                    if (function.browseMovies(C) != -1)
+                        function.selectMovie(C);
                     break;
                 }
                 case 4:

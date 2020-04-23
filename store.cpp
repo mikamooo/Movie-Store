@@ -7,32 +7,31 @@ void Main::createAccount(string db)
     string connect1 = "dbname = " + db + " user = movie_customer password = password hostaddr = 127.0.0.1 port = 5432";
     connection C(connect);
     connection C1(connect1);
-    connection C2(connect1);
 
     string street, city, state, zip, year, month, day, email, password, first, last, sql, confirm;
     int exists = 0, new_cid;
 
-    getline(cin, street); // Get the newline character after selecting an option first
+    cin.ignore(); // Get the newline character after selecting an option first
 
     do
     {
         cout << "Enter your e-mail: ";
         getline(cin, email);
 
-        sql = "SELECT CID FROM Customers WHERE Email = '" + email + "';"
-                "SELECT CID FROM Customers ORDER BY CID DESC LIMIT 1;";
+        sql = "SELECT CID FROM Customers WHERE Email = '" + email + "';";
 
         nontransaction N1(C1); // Create a non-transactional object
         result R(N1.exec(sql)); // Get the result of the query
-
-        new_cid = R.at(0)["cid"].as<int>() + 1;
+        N1.commit();
 
         if (R.size() != 0)
         {
             cout << "There is already an account associated with this e-mail." << endl
-                 << "Please login or enter a new e-mail.";
+                 << "Please login or enter a new e-mail." << endl;
             exists = 1;
         }
+        else
+            exists = 0;
 
     } while (exists);
 
@@ -66,11 +65,13 @@ void Main::createAccount(string db)
         cin >> confirm;
     }
 
-    sql = "SELECT CURRENT_DATE;";
+    sql = "SELECT CID, CURRENT_DATE FROM Customers ORDER BY CID DESC LIMIT 1;";
 
-    nontransaction N2(C2); // Create a non-transactional object
+    nontransaction N2(C1); // Create a non-transactional object
     result R(N2.exec(sql)); // Get the result of the query
+    N2.commit();
 
+    new_cid = R.at(0)["cid"].as<int>() + 1;
     confirm = R.at(0)["current_date"].as<string>();
 
     sql = "INSERT INTO Customers(CID, Email, Password, CName, Created, Address, DOB)"
@@ -87,7 +88,7 @@ void Main::createAccount(string db)
 
     C.disconnect();
     C1.disconnect();
-    C2.disconnect();
+
     User customer;
     customer.loginPage(db);
 }
@@ -119,6 +120,7 @@ void User::loginPage(string db)
         
         nontransaction N1(C); // Create a non-transactional object
         result R(N1.exec(sql)); // Get the result of the query
+        N1.commit();
 
         if (R.size() == 0) // If the result doesn't return a tuple, the email or password was incorrect
         {
@@ -173,7 +175,7 @@ void User::loginPage(string db)
     }
     else // Or let the customer know that they have successfully logged in.
     {
-        cout << "You have successfully logged in!" << endl;
+        cout << "You have successfully logged in!" << endl << endl;
         userMenu(C);
     }
 
@@ -181,7 +183,7 @@ void User::loginPage(string db)
 
 void User::userMenu(connection& C)
 {
-    int option;
+    int option, select;
     do{
         cout << "***********************************************************************" << endl
             << "*                    Welcome back movie lover!                        *" << endl
@@ -199,8 +201,8 @@ void User::userMenu(connection& C)
         {
             case 1:{
                 functions function;
-                function.browseMovies(C);
-                int select = function.selectMovie(C,1);
+                if (function.browseMovies(C) != -1)
+                    select = function.selectMovie(C,1);
                 if(select!=-1)
                     function.addToCart(C,cid, select);
                 break;}
@@ -245,7 +247,23 @@ void User::viewOrders(connection& C)
         
     nontransaction N1(C); // Create a non-transactional object
     result R(N1.exec(sql)); // Get the result of the query
+    N1.commit();
 
+    if (R.size() == 0)
+    {
+        cout << "You have not placed any orders yet." << endl << endl;
+        cout << "1) Return to user menu" << endl;
+        cin >> option;
+
+        while (option != 1)
+        {
+            cout << "Please select a valid option" << endl;
+            cin >> option;
+        } 
+
+        return;
+    }
+        
     for (result::const_iterator c = R.begin(); c != R.end(); c++) // Print the results
     {
         cout << "Order Number: " << c[0].as<string>() << endl;
@@ -262,11 +280,11 @@ void User::viewOrders(connection& C)
         cout << "Shipping Address: " << c[3].as<string>() << endl;
         cout << "Order Status: " << c[4].as<string>() << endl << endl;
     } 
-    N1.commit();
+    
     do
     {
         cout << "1)View More"<<endl
-                <<"2)Return to user menu" << endl; // Prompt the customer to return to the user menu
+             <<"2)Return to user menu" << endl; // Prompt the customer to return to the user menu
         cin >> option;
 
         switch(option)
@@ -286,38 +304,55 @@ void User::viewOrders(connection& C)
 }
 
 void User::viewAllOrders(connection &C){
-string sql = "SELECT title, qty2, (movies.price*cart2.qty2) as price,Received,Shipped,oid,address FROM movies NATURAL JOIN "
-"(SELECT cid, mid, qty as qty2,Received,Shipped,OID,address FROM cart NATURAL JOIN orders "
-"WHERE cid = " +to_string(cid)+" AND OID IS NOT NULL) as cart2 " 
-"ORDER BY OID;";   
-nontransaction N1(C); // Create a non-transactional object
+    string sql = "SELECT title, qty2, (movies.price*cart2.qty2) as price,Received,Shipped,oid,address FROM movies NATURAL JOIN "
+    "(SELECT cid, mid, qty as qty2,Received,Shipped,OID,address FROM cart NATURAL JOIN orders "
+    "WHERE cid = " +to_string(cid)+" AND OID IS NOT NULL) as cart2 " 
+    "ORDER BY OID;";   
+    nontransaction N1(C); // Create a non-transactional object
 
-result *R = new result(N1.exec(sql)); // Get the result of the query
-int i = 1;
-int oid = -1;
-for(auto row : *R)
-{int qty = row["qty2"].as<int>(); 
+    result *R = new result(N1.exec(sql)); // Get the result of the query
+    int oid = -1;
+    for(auto row : *R)
+    {int qty = row["qty2"].as<int>(); 
 
-if(oid !=row["oid"].as<int>())
-    {
-    oid = row["oid"].as<int>();
-    try{
-            cout <<endl<<endl<<"Order# "<<row["oid"]<<endl;
-            cout <<"Date Order Placed: "<<row["received"]<<endl;
-            cout <<"Date Shipped: "<<row["shipped"].as<string>()<<endl;
-        }
-    catch(const std::exception& e)
+    if(oid !=row["oid"].as<int>())
         {
-        cout<< "N/A" <<endl;
+        oid = row["oid"].as<int>();
+        try{
+                cout <<endl<<endl<<"Order #"<<row["oid"]<<endl;
+                cout <<"Date Order Placed: "<<row["received"]<<endl;
+                cout <<"Date Shipped: "<<row["shipped"].as<string>()<<endl << endl;
+            }
+        catch(const std::exception& e)
+            {
+            cout<< "N/A" <<endl << endl;
+            }
+
+        string line = string(51, '=');
+        cout << line << endl
+        << setw(18)<< left << "|" << setw(32) << "Items in Order" << "|" << endl << line << endl;
         }
+
+        string temp = to_string(row["title"]);
+        if(temp.length()>40)
+            temp= temp.substr(0,34) + "...";
+
+        cout << setw(40) << left << temp << setw(5) << qty << setw(12)<< "$"+ to_string(row["price"]) << endl;
+    }
+    cout <<endl;
+    delete R;
+
+    int option;
+    cout << "1) Return to user menu" << endl;
+    cin >> option;
+
+    while (option != 1)
+    {
+        cout << "Please select a valid option." << endl;
+        cin >> option;
     }
 
-    cout << row["title"] << "\t" << qty<< "\t$" <<row["price"] <<"\t"<< endl;
-    
-}
-cout <<endl;
-delete R;
-return;
+    return;
 }
 
 int User::viewAccount(connection& C)
@@ -346,6 +381,7 @@ int User::viewAccount(connection& C)
             
         nontransaction N1(C); // Create a non-transactional object
         result R(N1.exec(sql)); // Get the result of the query
+        N1.commit();
 
         for (result::const_iterator c = R.begin(); c != R.end(); c++) // Print the results
         {
@@ -380,107 +416,103 @@ int User::viewAccount(connection& C)
 
 void User::placeOrder(connection& C)
 {
-cout <<"Would you like to place an order?"<<endl
-        <<"1)Yes"<<endl
-        <<"2)No"<<endl;
-int option;
-cin >>option;
-if(option!=1)
-    return;
-string sql = "SELECT * FROM movies NATURAL JOIN(SELECT mid,cid,qty as qty2 FROM cart WHERE oid = -1 AND cid" 
-            "= "+to_string(cid)+") as cart WHERE cart.qty2>movies.qty;";
-nontransaction N0(C); // Create a non-transactional object
-result R0(N0.exec(sql)); // Get the result of the query
-N0.commit();
-for (auto row : R0)
-    {
-    if(row["qty"].as<int>()<=0)
-        {cout << "Sorry, Looks like we ran out of "<<row["title"]<<". We have removed\nit from your cart!"<<endl;
-            sql = "DELETE FROM cart WHERE cid= "+to_string(cid)
-            +" AND oid=-1 and mid = '"+row["mid"].as<string>() +"';";
-        work W1(C); // Create a transactional object
-        W1.exec(sql);
-        W1.commit();
-        continue;}
-    
-    cout<<"You have more copies of "<<row["title"]<<" in your cart than we have in stock.\n"
-    "would you like to purchase " <<row["qty"] <<" copies or remove them from your cart?"
-    "\n1)Purchase " <<row["qty"] <<" copies"<<endl
-    <<"2) Remove all from cart"<<endl;
-    cin>>option;
-    switch (option)
-    {
-    case 1:
-         {
-        sql = "UPDATE cart SET qty = movies.qty FROM "
-            "movies NATURAL JOIN (SELECT mid,cid,oid,qty as qty2 FROM cart) AS c2 WHERE cart.cid= "
-            +to_string(cid)+" AND cart.oid=-1 and movies.title = '"+row["title"].as<string>() +"';";
-        work W1(C); // Create a transactional object
-        W1.exec(sql);
-        W1.commit();
-        break;}
-    case 2:
-        {sql = "DELETE FROM cart WHERE cid= "+to_string(cid)
-            +" AND oid=-1 and mid = '"+row["mid"].as<string>() +"';";
-        work W1(C); // Create a transactional object
-        W1.exec(sql);
-        W1.commit();
-        break;}
-    default:
-        break;
-    }
-
+    cout <<"Would you like to place an order?"<<endl
+            <<"1)Yes"<<endl
+            <<"2)No"<<endl;
+    int option;
+    cin >>option;
+    if(option!=1)
+        return;
+    string sql = "SELECT * FROM movies NATURAL JOIN(SELECT mid,cid,qty as qty2 FROM cart WHERE oid = -1 AND cid" 
+                "= "+to_string(cid)+") as cart WHERE cart.qty2>movies.qty;";
+    nontransaction N0(C); // Create a non-transactional object
+    result R0(N0.exec(sql)); // Get the result of the query
+    N0.commit();
+    for (auto row : R0)
+        {
+        if(row["qty"].as<int>()<=0)
+            {cout << "Sorry, Looks like we ran out of "<<row["title"]<<". We have removed\nit from your cart!"<<endl;
+                sql = "DELETE FROM cart WHERE cid= "+to_string(cid)
+                +" AND oid=-1 and mid = '"+row["mid"].as<string>() +"';";
+            work W1(C); // Create a transactional object
+            W1.exec(sql);
+            W1.commit();
+            continue;}
         
+        cout<<"You have more copies of "<<row["title"]<<" in your cart than we have in stock.\n"
+        "Would you like to purchase " <<row["qty"] <<" copies or remove them from your cart?"
+        "\n1)Purchase " <<row["qty"] <<" copies"<<endl
+        <<"2) Remove all from cart"<<endl;
+        cin>>option;
+        switch (option)
+        {
+        case 1:
+            {
+            sql = "UPDATE cart SET qty = movies.qty FROM "
+                "movies NATURAL JOIN (SELECT mid,cid,oid,qty as qty2 FROM cart) AS c2 WHERE cart.cid= "
+                +to_string(cid)+" AND cart.oid=-1 and movies.title = '"+row["title"].as<string>() +"';";
+            work W1(C); // Create a transactional object
+            W1.exec(sql);
+            W1.commit();
+            break;}
+        case 2:
+            {sql = "DELETE FROM cart WHERE cid= "+to_string(cid)
+                +" AND oid=-1 and mid = '"+row["mid"].as<string>() +"';";
+            work W1(C); // Create a transactional object
+            W1.exec(sql);
+            W1.commit();
+            break;}
+        default:
+            break;
+        }
+
+            
+        }
+    N0.commit();
+    sql= "SELECT MAX(OID) as OID FROM orders;";
+    
+    nontransaction N1(C); // Create a non-transactional object
+    result R(N1.exec(sql)); // Get the result of the query
+
+    int newID = R.at(0)["OID"].as<int>()+1;
+
+    sql = "SELECT * FROM cart WHERE CID="+to_string(cid)+"AND oid=-1;";
+    result R2(N1.exec(sql)); // Get the result of the query
+    if(R2.size()<1)
+        {cout << "It looks like everything has been removed from your cart"<<endl;
+        return;}
+
+    string address;
+
+    cout << "Would you like this shipped to your home address?" <<endl
+            <<"1)Yes"<<endl
+            <<"2)No"<<endl;
+    cin>>option;
+    if(option!=1)
+        {cout <<"Enter the address you would like this to be shipped to"<<endl; 
+        cin.ignore(); getline(cin,address);}
+    else
+    {sql = "SELECT address FROM customers WHERE CID="+to_string(cid)+";";
+    result R(N1.exec(sql)); // Get the result of the query
+
+    address= R.at(0)["address"].as<string>();
     }
-N0.commit();
-sql= "SELECT MAX(OID) as OID FROM orders;";
-   
-nontransaction N1(C); // Create a non-transactional object
-result R(N1.exec(sql)); // Get the result of the query
 
-int newID = R.at(0)["OID"].as<int>()+1;
+    N1.commit();
 
-sql = "SELECT * FROM cart WHERE CID="+to_string(cid)+"AND oid=-1;";
-result R2(N1.exec(sql)); // Get the result of the query
-if(R2.size()<1)
-    {cout << "It looks like everything has been removed from your cart"<<endl;
-    return;}
+    sql ="INSERT INTO Orders(OID, CID, Received, Shipped, Address, Status)"
+                "VALUES("+to_string(newID) +","+to_string(cid)+", CURRENT_DATE, NULL, '"+address+"', 'In Progress');";
+    work W1(C); // Create a transactional object
+    W1.exec(sql);
+    W1.commit();
 
-string address;
+    cout << endl << "Your ordered has been received!" << endl 
+                 << "To view your order please select 'View orders' from the user menu." << endl << endl;
 
-cout << "Would you like this shipped to your home address?" <<endl
-        <<"1)Yes"<<endl
-        <<"2)No"<<endl;
-cin>>option;
-if(option!=1)
-    {cout <<"Enter the address you would like this to be shipped to"<<endl; 
-    cin.ignore(); getline(cin,address);}
-else
-{sql = "SELECT address FROM customers WHERE CID="+to_string(cid)+";";
-result R(N1.exec(sql)); // Get the result of the query
-
-address= R.at(0)["address"].as<string>();
-}
-
-N1.commit();
-
-
-
-sql ="INSERT INTO Orders(OID, CID, Received, Shipped, Address, Status)"
-            "VALUES("+to_string(newID) +","+to_string(cid)+", CURRENT_DATE, NULL, '"+address+"', 'In Progress');";
-work W1(C); // Create a transactional object
-W1.exec(sql);
-W1.commit();
-return;
-
-
+    return;
 }
 int User::updateAccountInfo(connection& C)
 {
-    string connect = "dbname = " + database + " user = movie_customer password = password hostaddr = 127.0.0.1 port = 5432";
-    connection C1(connect); // Create new connections so that another nontransaction can be used
-    connection C2(connect); // And so that transactions can be used after a nontransaction
-
     int option, tries = 3;
     string sql, change, curr, confirm;
     bool valid;
@@ -504,27 +536,22 @@ int User::updateAccountInfo(connection& C)
         switch(option)
         {
             case 1:
-                u.changeEmail(C1, C2, "CustomerView");
+                u.changeEmail(C, "CustomerView");
                 break;
             case 2:
             {
-                if (!u.changePassword(C1, C2, "CustomerView")) // If the user enters an invalid current password too many times, disconnect
-                {
-                    C1.disconnect();
-                    C2.disconnect();
+                if (!u.changePassword(C, "CustomerView")) // If the user enters an invalid current password too many times, disconnect
                     return -1; 
-                }
-                
                 break;
             }
             case 3:
-                changeAddress(C1, C2);
+                changeAddress(C);
                 break;
             case 4:
-                u.changeName(C1, C2, "CustomerView", "CName");
+                u.changeName(C, "CustomerView", "CName");
                 break;
             case 5:
-                changeBirthday(C1, C2);
+                changeBirthday(C);
                 break;
             case 6:
                 return 0;
@@ -535,20 +562,19 @@ int User::updateAccountInfo(connection& C)
 
     } while(option != 6);
 
-    C1.disconnect();
-    C2.disconnect();
     return 0;
 }
 
-void User::changeAddress(connection& C1, connection& C2)
+void User::changeAddress(connection& C)
 {
     // Create SQL statement to get the customer's address
     string sql = "SELECT Address FROM CustomerView;";
     string street, city, state, zip;
                     
-    nontransaction N1(C1); // Create a non-transactional object
+    nontransaction N1(C); // Create a non-transactional object
     result R(N1.exec(sql)); // Get the result of the query
     result::const_iterator c = R.begin(); 
+    N1.commit();
                 
     cout << "Your address is " << c[0].as<string>() << endl
          << "Enter your new street address: ";
@@ -564,22 +590,23 @@ void User::changeAddress(connection& C1, connection& C2)
     // Create SQL statement to update the customer's address
     sql = "UPDATE CustomerView SET Address = '" + street + " " + city + ", " + state + " " + zip + "';";
 
-    work W1(C2); // Create a transactional object
+    work W1(C); // Create a transactional object
     W1.exec(sql);
     W1.commit();
 
     cout << "Your address has been succesfully changed." << endl << endl;
 }
 
-void User::changeBirthday(connection& C1, connection& C2)
+void User::changeBirthday(connection& C)
 {
     // Create SQL statement to get the customer's birthday
     string sql = "SELECT DOB FROM CustomerView;";
     string year, month, day;
                     
-    nontransaction N1(C1); // Create a non-transactional object
+    nontransaction N1(C); // Create a non-transactional object
     result R(N1.exec(sql)); // Get the result of the query
     result::const_iterator c = R.begin(); 
+    N1.commit();
                 
     cout << "Your birthday is " << c[0].as<string>() << endl
          << "Enter your new birthday year (YYYY): ";
@@ -592,7 +619,7 @@ void User::changeBirthday(connection& C1, connection& C2)
     // Create SQL statement to update the customer's birthday
     sql = "UPDATE CustomerView SET DOB = '" + year + "-" + month + "-" + day + "';";
 
-    work W1(C2); // Create a transactional object
+    work W1(C); // Create a transactional object
     W1.exec(sql);
     W1.commit();
 
@@ -626,6 +653,7 @@ void Admin::loginAdmin(string db)
         
         nontransaction N1(C); // Create a non-transactional object
         result R(N1.exec(sql)); // Get the result of the query
+        N1.commit();
 
         if (R.size() == 0) // If the result doesn't return a tuple, the email or password was incorrect
         {
@@ -785,15 +813,11 @@ void Admin::updateMovieMenu(connection& C)
 
 void Admin::updateMovies(connection& C)
 {
-    string connect = "dbname = " + database + " user = movie_admin password = admin123 hostaddr = 127.0.0.1 port = 5432";
-    connection C1(connect); // Create new connections so that a transactional can be used after a nontransactional
-    connection C2(connect);
-
     functions function;
-    function.browseMovies(C);
-    int select = function.selectAdmin(C);
     int option;
     Utility u;
+    if (function.browseMovies(C) != -1)
+        function.selectAdmin(C);
 
     do
     {
@@ -811,25 +835,25 @@ void Admin::updateMovies(connection& C)
         switch(option)
         {
             case 1:
-                u.updateAttr(C, C1, C2, "title");
+                u.updateAttr(C, "title");
                 break;
             case 2:
-                u.updateAttr(C, C1, C2, "genre");
+                u.updateAttr(C, "genre");
                 break;
             case 3:
-                u.updateAttr(C, C1, C2, "year");
+                u.updateAttr(C, "year");
                 break;
             case 4:
-                u.updateAttr(C, C1, C2, "qty");
+                u.updateAttr(C, "qty");
                 break;
             case 5:
-                u.updateAttr(C, C1, C2, "price");
+                u.updateAttr(C, "price");
                 break;
             case 6:
-                u.updateAttr(C, C1, C2, "rating");
+                u.updateAttr(C, "rating");
                 break;
             case 7:
-                u.updateAttr(C, C1, C2, "des");
+                u.updateAttr(C, "des");
                 break;
             case 8:
                 return;
@@ -843,7 +867,7 @@ void Admin::updateMovies(connection& C)
 
 }
 
-void Utility::updateAttr(connection& C, connection& C1, connection& C2, string attr)
+void Utility::updateAttr(connection& C, string attr)
 {   
     string sql, change, year, month, day, select;
     int option = 0;
@@ -851,9 +875,10 @@ void Utility::updateAttr(connection& C, connection& C1, connection& C2, string a
     
     sql = "SELECT " + attr + " FROM UpdateView;";
 
-    nontransaction N(C1); // Create a non-transactional object
+    nontransaction N(C); // Create a non-transactional object
     result R(N.exec(sql)); // Get the result of the query
     result::const_iterator c = R.begin();
+    N.commit();
     
     if (attr == "des")
         cout << "The current " + attr + " of this movie is: " << endl << c[0].as<string>() << endl;
@@ -979,8 +1004,9 @@ void Utility::updateAttr(connection& C, connection& C1, connection& C2, string a
         // Create SQL statement to get the tuple with the given title
         sql = "SELECT * FROM movies WHERE title ='" + change + "';";
 
-        nontransaction N1(C2); // Create a non-transactional object
+        nontransaction N1(C); // Create a non-transactional object
         result R1(N1.exec(sql)); // Get the result of the query
+        N1.commit();
 
         if (R1.size() != 0) // If a tuple with the given title exists, let the admin know
         {
@@ -1003,10 +1029,6 @@ void Utility::updateAttr(connection& C, connection& C1, connection& C2, string a
 
 void Admin::addMovies(connection& C)
 {
-    string connect = "dbname = " + database + " user = movie_admin password = admin123 hostaddr = 127.0.0.1 port = 5432";
-    connection C1(connect); // Create new connections so that another nontransaction can be used
-    connection C2(connect);
-
     string title, genre, year, month, day, qty, price, rating, des, sql, select;
     int option = 0, new_mid;
 
@@ -1020,8 +1042,9 @@ void Admin::addMovies(connection& C)
         // Create SQL statement to get the tuple with the given title
         sql = "SELECT * FROM movies WHERE title ilike'%" + title + "%';";
 
-        nontransaction N1(C1); // Create a non-transactional object
+        nontransaction N1(C); // Create a non-transactional object
         result R1(N1.exec(sql)); // Get the result of the query
+        N1.commit();
 
         if (R1.size() != 0) // If a tuple with the given title exists, let the admin know
         {
@@ -1033,8 +1056,6 @@ void Admin::addMovies(connection& C)
             if (stoi(select) == 2) // If the admin chooses to update instead, redirect them 
             {
                 updateMovies(C);
-                C1.disconnect();
-                C2.disconnect();
                 return;
             }
         }
@@ -1154,8 +1175,9 @@ void Admin::addMovies(connection& C)
 
     // Create SQL statement largest MID
     sql = "SELECT MID FROM Movies ORDER BY MID DESC LIMIT 1";
-    nontransaction N2(C2); // Create a non-transactional object
+    nontransaction N2(C); // Create a non-transactional object
     result R2(N2.exec(sql)); // Get the result of the query
+    N2.commit();
 
     new_mid = R2.at(0)["mid"].as<int>() + 1; // Make the new MID the MID after the largest one
 
@@ -1167,9 +1189,6 @@ void Admin::addMovies(connection& C)
     work W1(C); // Create a transactional object
     W1.exec(sql);
     W1.commit();
-    
-    C1.disconnect();
-    C2.disconnect();
 }
 
 int Admin::viewAccount(connection& C)
@@ -1198,6 +1217,7 @@ int Admin::viewAccount(connection& C)
             
         nontransaction N1(C); // Create a non-transactional object
         result R(N1.exec(sql)); // Get the result of the query
+        N1.commit();
 
         for (result::const_iterator c = R.begin(); c != R.end(); c++) // Print the results
         {
@@ -1231,10 +1251,6 @@ int Admin::viewAccount(connection& C)
 
 int Admin::updateAccountInfo(connection& C)
 {
-    string connect = "dbname = " + database + " user = movie_admin password = admin123 hostaddr = 127.0.0.1 port = 5432";
-    connection C1(connect); // Create new connections so that another nontransaction can be used
-    connection C2(connect); // And so that transactions can be used after a nontransaction
-
     int option, tries = 3;
     string sql, change, curr, confirm;
     bool valid;
@@ -1256,23 +1272,18 @@ int Admin::updateAccountInfo(connection& C)
         switch(option)
         {
             case 1:
-                u.changeEmail(C1, C2, "AdminView");
+                u.changeEmail(C, "AdminView");
                 break;
             case 2:
             {
-                valid = u.changePassword(C1, C2, "AdminView");
+                valid = u.changePassword(C, "AdminView");
 
                 if (!valid) // If the admin enters an invalid current password too many times, disconnect
-                {
-                    C1.disconnect();
-                    C2.disconnect();
                     return -1; 
-                }
-                
                 break;
             }
             case 3:
-                u.changeName(C1, C2, "AdminView", "AName");
+                u.changeName(C, "AdminView", "AName");
                 break;
             case 4:
                 option = -1;
@@ -1283,17 +1294,11 @@ int Admin::updateAccountInfo(connection& C)
 
     } while(option != -1);
 
-    C1.disconnect();
-    C2.disconnect();
     return 0;
 }
 
 int Admin::addNewAdmin(connection& C)
 {
-    string connect = "dbname = " + database + " user = movie_admin password = admin123 hostaddr = 127.0.0.1 port = 5432";
-    connection C1(connect); // Create new connections so that another nontransaction can be used
-    connection C2(connect);
-
     string email, password, first, last, sql, confirm;
     int tries = 3;
     bool valid;
@@ -1318,8 +1323,9 @@ int Admin::addNewAdmin(connection& C)
         // Create SQL statement to verify the admin's password
         sql = "SELECT AID FROM Admins WHERE AID = " + to_string(aid) + " AND Password = '" + confirm + "';";
 
-        nontransaction N1(C1); // Create a non-transactional object
+        nontransaction N1(C); // Create a non-transactional object
         result R(N1.exec(sql)); // Get the result of the query
+        N1.commit();
 
         if (R.size() == 0) // Check that a tuple was returned
         {
@@ -1334,17 +1340,16 @@ int Admin::addNewAdmin(connection& C)
                 
     if (tries == 0 && valid == false) // If the customer/admin used up all their attempts, disconnect
     {
-        cout << "Too many invalid login attempts. You will be disconnected." << endl;
-        C1.disconnect();
-        C2.disconnect();       
+        cout << "Too many invalid login attempts. You will be disconnected." << endl;       
         return -1;
     }
 
     // Create SQL statement to get the largest AID
     sql = "SELECT AID FROM Admins ORDER BY AID DESC LIMIT 1;";
 
-    nontransaction N2(C2); // Create a non-transactional object
+    nontransaction N2(C); // Create a non-transactional object
     result R(N2.exec(sql)); // Get the result of the query
+    N2.commit();
 
     int new_aid = R.at(0)["aid"].as<int>() + 1; // The new AID is now the AID after the largest AID
 
@@ -1355,19 +1360,18 @@ int Admin::addNewAdmin(connection& C)
     W1.exec(sql);
     W1.commit();
 
-    C1.disconnect();
-    C2.disconnect();
     return 0;
 }
 
-void Utility::changeEmail(connection& C1, connection& C2, string view)
+void Utility::changeEmail(connection& C, string view)
 {
     // Create SQL statement to get the current email
     string sql = "SELECT Email FROM " + view + ";";
     string change;
                     
-    nontransaction N1(C1); // Create a non-transactional object
+    nontransaction N1(C); // Create a non-transactional object
     result R(N1.exec(sql)); // Get the result of the query
+    N1.commit();
     result::const_iterator c = R.begin(); 
                 
     cout << "Your current e-mail is " << c[0].as<string>() << endl 
@@ -1377,14 +1381,14 @@ void Utility::changeEmail(connection& C1, connection& C2, string view)
     // Create SQL statement to update the customer/admin's e-mail
     sql = "UPDATE " + view + " SET Email = '" + change + "';";
 
-    work W1(C2); // Create a transactional object
+    work W1(C); // Create a transactional object
     W1.exec(sql);
     W1.commit();
 
-    cout << "Your e-mail has been succesfully changed." << endl << endl;
+    cout << "Your e-mail has been succesfully changed!" << endl << endl;
 }
 
-bool Utility::changePassword(connection& C1, connection& C2, string view)
+bool Utility::changePassword(connection& C, string view)
 {
     int tries = 3;
     string sql, change, curr, confirm;
@@ -1401,8 +1405,9 @@ bool Utility::changePassword(connection& C1, connection& C2, string view)
         // Create SQL statement to get the customer/admin's email (can retrieve any attibute, just not the password)
         sql = "SELECT Email FROM " + view + " WHERE Password = '" + curr + "';";
 
-        nontransaction N1(C1); // Create a non-transactional object
+        nontransaction N1(C); // Create a non-transactional object
         result R(N1.exec(sql)); // Get the result of the query
+        N1.commit();
 
         if (R.size() == 0) // Check that a tuple was returned
         {
@@ -1436,23 +1441,24 @@ bool Utility::changePassword(connection& C1, connection& C2, string view)
     // Create SQL statement to update the customer/admin's password
     sql = "UPDATE " + view + " SET Password = '" + change + "';";
 
-    work W1(C2); // Create a transactional object
+    work W1(C); // Create a transactional object
     W1.exec(sql);
     W1.commit();
 
-    cout << "Your password has been succesfully changed." << endl << endl;
+    cout << "Your password has been succesfully changed!" << endl << endl;
     return true;
 }
 
-void Utility::changeName(connection& C1, connection& C2, string view, string name)
+void Utility::changeName(connection& C, string view, string name)
 {
     // Create SQL statement to get the customer/admin's name
     string sql = "SELECT " + name + " FROM " + view + ";";
     string first, last;
                     
-    nontransaction N1(C1); // Create a non-transactional object
+    nontransaction N1(C); // Create a non-transactional object
     result R(N1.exec(sql)); // Get the result of the query
     result::const_iterator c = R.begin(); 
+    N1.commit();
                 
     cout << "Your name is " << c[0].as<string>() << endl
          << "Enter your new first name: ";
@@ -1463,9 +1469,9 @@ void Utility::changeName(connection& C1, connection& C2, string view, string nam
     // Create SQL statement to update the customer/admin's name
     sql = "UPDATE " + view + " SET " + name + " = '" + first + " " + last + "';";
 
-    work W1(C2); // Create a transactional object
+    work W1(C); // Create a transactional object
     W1.exec(sql);
     W1.commit();
 
-    cout << "Your name has been succesfully changed." << endl << endl;
+    cout << "Your name has been succesfully changed!" << endl << endl;
 }

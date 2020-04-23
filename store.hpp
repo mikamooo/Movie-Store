@@ -25,8 +25,8 @@ class User
         void viewAllOrders(connection&);
         int viewAccount(connection&);
         int updateAccountInfo(connection&);
-        void changeAddress(connection&, connection&);
-        void changeBirthday(connection&, connection&);
+        void changeAddress(connection&);
+        void changeBirthday(connection&);
 };
 
 class Admin
@@ -49,10 +49,10 @@ class Admin
 class Utility
 {
     public:
-        void changeEmail(connection&, connection&, string);
-        bool changePassword(connection&, connection&, string);
-        void changeName(connection&, connection&, string, string);
-        void updateAttr(connection&, connection&, connection&, string);
+        void changeEmail(connection&, string);
+        bool changePassword(connection&, string);
+        void changeName(connection&, string, string);
+        void updateAttr(connection&, string);
 };
 
 #endif

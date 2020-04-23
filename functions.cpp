@@ -10,9 +10,9 @@ functions::~functions()
 delete res;
 }
 
-void functions::browseMovies(connection &C)
+int functions::browseMovies(connection &C)
 {
-int option;
+int option, opt;
 cout            << "***********************************************************************" << endl
                 << "*                         Browse Movies                               *" << endl
                 << "*                                                                     *" << endl
@@ -42,7 +42,13 @@ cout            << "************************************************************
         }
         case 4:
         {   
-            displayByTitle(C);
+            do
+            {
+                opt = displayByTitle(C);
+                if (opt == -1)
+                    return -1;
+                
+            } while(opt);
             break;
         }
         default:
@@ -51,7 +57,7 @@ cout            << "************************************************************
            
     }
 
-return;
+return 0;
 }
 
 void functions::displayAllMovies(connection &C)
@@ -155,7 +161,6 @@ int functions::selectMovie(connection &C, int user)
     do
     {
     
-    
     cout    <<"Would you like to select a movie?" <<endl
             <<"1) Yes"<<endl
             <<"2) No"<<endl;
@@ -172,8 +177,15 @@ int functions::selectMovie(connection &C, int user)
                     select = -1;
                     break;
                     }
-                cout <<res->at(select-1)["title"] <<"\t\tQuantity: "<<res->at(select-1)["qty"] 
-                <<endl <<"Synopsis: "<<res->at(select-1)["des"]  <<endl;
+                string temp = to_string(res->at(select-1)["title"]);
+                if(temp.length()>40)
+                    temp= temp.substr(0,34) + "...";
+
+                cout << endl << string(75, '=') << endl << setw(40) << left << temp << setw(15) 
+                << "Rated: "+ to_string(res->at(select-1)["rating"]) 
+                << "Released: " + to_string(res->at(select-1)["year"]) << endl << string(75, '=') << endl
+                
+                <<endl <<"Synopsis: "<<res->at(select-1)["des"]  <<endl << endl;
                 if(user ==1){
                     cout << "Would you like to add this movie to your cart?"<<endl
                         <<"1)Yes"<<endl
@@ -243,6 +255,13 @@ void functions::addToCart(connection &C, int cid, int num)
 }
 
 int functions::viewCart(connection &C, int CID){
+
+    cout << "***********************************************************************" << endl
+         << "*                                                                     *" << endl
+         << "*                             Your Cart                               *" << endl
+         << "*                                                                     *" << endl
+         << "***********************************************************************" << endl << endl;
+
 string sql = "SELECT title, qty2, (movies.price*cart2.qty2) as price FROM movies NATURAL JOIN "
 "(SELECT cid, mid, qty as qty2 FROM cart WHERE cid = " +to_string(CID)+" AND OID =-1) as cart2;";   
 nontransaction N1(C); // Create a non-transactional object
@@ -251,17 +270,40 @@ result *R = new result(N1.exec(sql)); // Get the result of the query
 int i = 1;
 for(auto row : *R)
 {int qty = row["qty2"].as<int>();
-    cout << i<< ". " << row["title"] << "\t" << qty<< "\t$" <<row["price"]<< endl;
+
+    string temp = to_string(row["title"]);
+    if(temp.length()>40)
+        temp= temp.substr(0,34) + "...";
+
+    cout <<setw(4)<<left << to_string(i)+ ". " << setw(40) << temp << setw(5) << qty <<setw(12)<< "$"
+    + to_string(row["price"]) << endl;
+    //cout << i<< ". " << row["title"] << "\t" << qty<< "\t$" <<row["price"]<< endl;
     i++;
 }
 cout <<endl;
+N1.commit();
+
 if(res!=nullptr)//if result is not null, delete current contents.
     {
     delete res;
     }
 res = R;
 if(i>1)
+{
+    sql = "SELECT SUM(price) FROM (SELECT (movies.price*cart2.qty2) as price FROM movies NATURAL JOIN "
+    "(SELECT cid, mid, qty as qty2 FROM cart WHERE cid = " +to_string(CID)+" AND OID =-1) as cart2) as total;"; 
+
+    nontransaction N2(C); // Create a non-transactional object
+    result R2(N2.exec(sql)); // Get the result of the query
+    result::const_iterator c = R2.begin();
+    N2.commit();
+
+    if (R2.size() != 0)
+        cout << "Your total: $" << c[0].as<string>() << endl << endl;
+
     return 1;
+}
+
 return 0;
 }
 
@@ -279,41 +321,64 @@ res = R;
 return;
 }
 
-void functions::displayByTitle(connection &C)
+int functions::displayByTitle(connection &C)
 {
-string option;
-cout << "Enter the title of the movie: " <<endl;
-cin.ignore();
-getline(cin, option);
-//cin >> option; cin.clear();
-string sql = "SELECT * FROM movies WHERE title ilike'%"+option+"%';";   
-nontransaction N1(C); // Create a non-transactional object
-result *R = new result(N1.exec(sql)); // Get the result of the query
+    string option;
+    cout << "Enter the title of the movie: " <<endl;
+    cin.ignore();
+    getline(cin, option);
+    //cin >> option; cin.clear();
+    string sql = "SELECT * FROM movies WHERE title ilike'%"+option+"%';";   
+    nontransaction N1(C); // Create a non-transactional object
+    result *R = new result(N1.exec(sql)); // Get the result of the query
 
-printMovies(R);
-if(res!=nullptr)//if result is not null, delete current contents.
+    if (R->size() == 0)
     {
-    delete res;
+        cout << endl << "Uh Oh! It looks like we don't have that title yet." << endl
+            << "Would you like to search for another title?" << endl
+            << "1) Yes " << endl << "2) No" << endl;
+        getline(cin, option);
+
+        switch(stoi(option))
+        {
+            case 1:
+                option = "Yes";
+                break;
+            default:
+                option = "No";
+                break;
+        }
     }
-res = R;
-return;
+    else
+        printMovies(R);
+    if(res!=nullptr)//if result is not null, delete current contents.
+        {
+        delete res;
+        }
+    res = R;
+    if (option == "No")
+        return -1;
+    else if(option == "Yes")
+        return 1;
+    else
+        return 0;
 }
 
 void functions::printMovies(result *R)
 {int max_text_size= 40;
 int i = 1;
-cout    <<setw(max_text_size+10+5+6)<<setfill('_') << ""<<endl
-         <<"|#|"<<setw((max_text_size+10+5+6)/2 -2)<<setfill(' ') <<"Movie Title"
-         <<setw((max_text_size+10+5+6)/2) << "| Genre | Price|"<<endl
-         <<setw(max_text_size+10+5+6)<<setfill('-') << ""<<endl;
-        // <<
-cout <<setfill(' ');
+string line = string(85, '=');
+
+cout << line << endl
+    << setw(17)<<left << "|#|" << setw(23) << "Movie Title" << setw(4) << "|" << setw(9) << "Genre"  
+    << setw(4)<< "|" << setw(8) << "Price" << setw(4)<< "|" << setw(15) << "Availability" << "|"
+    << endl << line << endl;
+
 for(auto row : *R)
 {
-    
     string temp = to_string(row["title"]);
     if(temp.length()>max_text_size)
-        temp= temp.substr(0,max_text_size-3) + "...";
+        temp= temp.substr(0,max_text_size-6) + "...";
     int stock = row["qty"].as<int>();
     string st;
     if(stock <=0)
@@ -328,7 +393,7 @@ for(auto row : *R)
     }
     
 
-    cout <<setw(4)<<left <<to_string(i)+ ". "  << setw(40)<<temp<<setw(10)<<to_string(row["genre"]) <<setw(6)<< "$"
+    cout <<setw(4)<<left << to_string(i)+ ". "  << setw(40)<<temp<<setw(13)<<to_string(row["genre"]) <<setw(12)<< "$"
     + to_string(row["price"]) << " " <<st<<endl;
     i++;
 }
