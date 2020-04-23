@@ -862,6 +862,25 @@ void Admin::updateMovies(connection& C)
                 cout << "Please select a valid option." << endl;
                 break;
         }
+
+        string sql = "SELECT * FROM UpdateView;";
+        nontransaction N(C); // Create a non-transactional object
+        result R(N.exec(sql)); // Get the result of the query
+        result::const_iterator c = R.begin();
+        N.commit();
+
+        cout << endl << "Here are the results of your update." << endl << endl;
+
+        for (result::const_iterator c = R.begin(); c != R.end(); c++) // Print the results
+        {
+            cout << "Title: " << c[1].as<string>() << endl;
+            cout << "Genre: " << c[2].as<string>() << endl;
+            cout << "Release Date: " << c[3].as<string>() << endl;
+            cout << "Quantity: " << c[4].as<string>() << endl;
+            cout << "Price: $" << c[5].as<string>() << endl;
+            cout << "Rating: " << c[6].as<string>() << endl;
+            cout << "Synopsis: " << c[7].as<string>() << endl << endl;
+        }
         
     } while(option != 8);
 
