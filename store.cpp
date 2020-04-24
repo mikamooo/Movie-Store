@@ -19,13 +19,14 @@ void Main::createAccount(string db)
         cout << "Enter your e-mail: ";
         getline(cin, email);
 
+        // Create SQL statement to check if the is already a CID with this e-mail
         sql = "SELECT CID FROM Customers WHERE Email = '" + email + "';";
 
         nontransaction N1(C1); // Create a non-transactional object
         result R(N1.exec(sql)); // Get the result of the query
         N1.commit();
 
-        if (R.size() != 0)
+        if (R.size() != 0) 
         {
             string option;
             cout << "There is already an account associated with this e-mail." << endl
@@ -88,15 +89,17 @@ void Main::createAccount(string db)
         cin >> confirm;
     }
 
+    // Create SQL statement to get the date and the largest CID
     sql = "SELECT CID, CURRENT_DATE FROM Customers ORDER BY CID DESC LIMIT 1;";
 
     nontransaction N2(C1); // Create a non-transactional object
     result R(N2.exec(sql)); // Get the result of the query
     N2.commit();
 
-    new_cid = R.at(0)["cid"].as<int>() + 1;
+    new_cid = R.at(0)["cid"].as<int>() + 1; 
     confirm = R.at(0)["current_date"].as<string>();
 
+    // Create SQL statement to insert the new customer into the Customers table
     sql = "INSERT INTO Customers(CID, Email, Password, CName, Created, Address, DOB)"
             "VALUES (" + to_string(new_cid) + ", '" + email + "', '" + password + "', '" + first + " " + last + "', '"
             + confirm + "', '" + street + " " + city + ", " + state + " " + zip + "', '" 
@@ -112,7 +115,7 @@ void Main::createAccount(string db)
     C.disconnect();
     C1.disconnect();
 
-    customer.loginPage(db);
+    customer.loginPage(db); // Redirect to the login page
 }
 
 void User::loginPage(string db)
@@ -876,6 +879,7 @@ void Admin::updateMovies(connection& C)
                 break;
         }
 
+        // Create SQL statement to all attributes from UpdateView
         string sql = "SELECT * FROM UpdateView;";
         nontransaction N(C); // Create a non-transactional object
         result R(N.exec(sql)); // Get the result of the query
@@ -884,7 +888,7 @@ void Admin::updateMovies(connection& C)
 
         cout << endl << "Here are the results of your update." << endl << endl;
 
-        for (result::const_iterator c = R.begin(); c != R.end(); c++) // Print the results
+        for (result::const_iterator c = R.begin(); c != R.end(); c++) // Print the results of the update
         {
             cout << "Title: " << c[1].as<string>() << endl;
             cout << "Genre: " << c[2].as<string>() << endl;
@@ -905,6 +909,7 @@ void Utility::updateAttr(connection& C, string attr)
     int option = 0;
     getline(cin, change); // Get the newline character from selecting an option
     
+    // Create SQL statement to get the value of the given attribute
     sql = "SELECT " + attr + " FROM UpdateView;";
 
     nontransaction N(C); // Create a non-transactional object
@@ -1055,7 +1060,7 @@ void Utility::updateAttr(connection& C, string attr)
             {
                 cout << endl << "The title '" + change + "' already exists." << endl 
                 << "Please enter a different title or return to the update menu." << endl
-                << "1) Enter a different title" << endl
+                << "1) Enter a different title" << endl // And give them the option to enter again or return
                 << "2) Return to update options" << endl;
                 getline(cin, option);
 
@@ -1080,7 +1085,7 @@ void Utility::updateAttr(connection& C, string attr)
         } while(exists);
     }
 
-    if (attr == "qty" || attr == "price")
+    if (attr == "qty" || attr == "price") // Update the view and Movies table
     {
         sql = "UPDATE UpdateView SET " + attr + " = " + change + ";";
     }
@@ -1374,14 +1379,12 @@ int Admin::addNewAdmin(connection& C)
     int tries = 3, exists;
     bool valid;
 
-    cout << "Enter the new administrator's e-mail: ";
-    cin >> email;
-
     do
     {
         cout << "Enter the new administrator's e-mail: ";
         cin >> email;
 
+        // Create SQL statement to check if the email belongs to another admin
         sql = "SELECT Email FROM Admins WHERE Email = '" + email + "';";
 
         nontransaction N(C); // Create a non-transactional object
@@ -1437,7 +1440,7 @@ int Admin::addNewAdmin(connection& C)
         cout << "Too many invalid login attempts. You will be disconnected." << endl;       
         return -1;
     }
-
+    cout << endl << "New administator successfully added!" << endl << endl;
     // Create SQL statement to get the largest AID
     sql = "SELECT AID FROM Admins ORDER BY AID DESC LIMIT 1;";
 
@@ -1471,7 +1474,7 @@ void Utility::changeEmail(connection& C, string view)
                 
     cout << "Your current e-mail is " << c[0].as<string>() << endl; 
 
-    do
+    do // Ensure that the e-mail doesn't belong to another account
     {
         cout << "Enter your new e-mail: ";
         cin >> change;
@@ -1596,7 +1599,7 @@ void Utility::changeName(connection& C, string view, string name)
 
 void Utility::changeBirthday(connection& C, string view)
 {
-    // Create SQL statement to get the customer's birthday
+    // Create SQL statement to get the customer/admin's birthday
     string sql = "SELECT DOB FROM " + view + ";";
     string year, month, day;
                     
@@ -1613,7 +1616,7 @@ void Utility::changeBirthday(connection& C, string view)
     cout << "Enter your new birthday day (DD): ";
     cin >> day;
 
-    // Create SQL statement to update the customer's birthday
+    // Create SQL statement to update the customer/admin's birthday
     sql = "UPDATE " + view + " SET DOB = '" + year + "-" + month + "-" + day + "';";
 
     work W1(C); // Create a transactional object
