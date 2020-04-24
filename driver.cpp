@@ -35,10 +35,10 @@ int main()
                 << "*                                                                     *" << endl
                  << "*                    Please select an option.                         *" << endl
                  << "***********************************************************************" << endl << endl
-                 << "1) Customer Login" << endl
+                 << "1) Customer login" << endl
                  << "2) Create an account" << endl
                  << "3) Browse for movies" << endl
-                 << "4) Admin Login" << endl
+                 << "4) Admin login" << endl
                  << "5) Exit" << endl;
         
         
@@ -49,13 +49,11 @@ int main()
                 {
                     User customer;
                     customer.loginPage(db);
-                    option =-1;
                     break;
                 }
                 case 2:
                     Main guest;
                     guest.createAccount(db);
-                    option = -1;
                     break;
                 case 3:
                 {functions function;
@@ -67,11 +65,13 @@ int main()
                 {
                     Admin admin;
                     admin.loginAdmin(db);
-                    option = -1;
                     break;
                 }
+                case 5:
+                    option =-1;
+                    break;
                 default:
-                option =-1;
+                    cout << "Please select a valid option." << endl << endl;
                     break;
            
             }

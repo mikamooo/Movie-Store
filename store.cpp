@@ -10,6 +10,7 @@ void Main::createAccount(string db)
 
     string street, city, state, zip, year, month, day, email, password, first, last, sql, confirm;
     int exists = 0, new_cid;
+    User customer;
 
     cin.ignore(); // Get the newline character after selecting an option first
 
@@ -26,9 +27,31 @@ void Main::createAccount(string db)
 
         if (R.size() != 0)
         {
+            string option;
             cout << "There is already an account associated with this e-mail." << endl
                  << "Please login or enter a new e-mail." << endl;
-            exists = 1;
+
+            do
+            {
+                cout << "1) Customer login" << endl
+                     << "2) Enter a new e-mail" << endl;
+                getline(cin, option);
+
+                switch(stoi(option))
+                {
+                    case 1:
+                        customer.loginPage(db);
+                        return;
+                        break;
+                    case 2:
+                        exists = 1;
+                        break;
+                    default:
+                        cout << "Please select a valid option." << endl;
+                        option = "-1";
+                        break;
+                }
+            } while(option == "-1");
         }
         else
             exists = 0;
@@ -89,7 +112,6 @@ void Main::createAccount(string db)
     C.disconnect();
     C1.disconnect();
 
-    User customer;
     customer.loginPage(db);
 }
 
@@ -175,7 +197,7 @@ void User::loginPage(string db)
     }
     else // Or let the customer know that they have successfully logged in.
     {
-        cout << "You have successfully logged in!" << endl << endl;
+        cout << endl << "You have successfully logged in!" << endl << endl;
         userMenu(C);
     }
 
@@ -214,7 +236,18 @@ void User::userMenu(connection& C)
                 if(function.viewCart(C, cid))
                     placeOrder(C);
                 else
-                    {cout<<"Your Cart is Empty!\n"<<endl;}
+                {
+                    int opt;
+                    cout<<"Your Cart is Empty!"<<endl << endl;
+                    cout << "1) Return to user menu" << endl;
+                    cin >> opt;
+
+                    while (opt != 1)
+                    {
+                        cout << "Please select a valid option." << endl;
+                        cin >> opt;
+                    }
+                }
                 break;}
             case 4:
                 if (viewAccount(C) == -1)
@@ -283,8 +316,8 @@ void User::viewOrders(connection& C)
     
     do
     {
-        cout << "1)View More"<<endl
-             <<"2)Return to user menu" << endl; // Prompt the customer to return to the user menu
+        cout << "1) View More"<<endl
+             <<"2) Return to user menu" << endl; // Prompt the customer to return to the user menu
         cin >> option;
 
         switch(option)
@@ -485,8 +518,8 @@ void User::placeOrder(connection& C)
     string address;
 
     cout << "Would you like this shipped to your home address?" <<endl
-            <<"1)Yes"<<endl
-            <<"2)No"<<endl;
+            <<"1) Yes"<<endl
+            <<"2) No"<<endl;
     cin>>option;
     if(option!=1)
         {cout <<"Enter the address you would like this to be shipped to"<<endl; 
@@ -508,6 +541,15 @@ void User::placeOrder(connection& C)
 
     cout << endl << "Your ordered has been received!" << endl 
                  << "To view your order please select 'View orders' from the user menu." << endl << endl;
+
+    cout << "1) Return to user menu" << endl;
+    cin >> option;
+
+    while (option != 1)
+    {
+        cout << "Please select a valid option." << endl;
+        cin >> option;
+    }
 
     return;
 }
@@ -594,7 +636,7 @@ void User::changeAddress(connection& C)
     W1.exec(sql);
     W1.commit();
 
-    cout << "Your address has been succesfully changed." << endl << endl;
+    cout << endl << "Your address has been succesfully changed." << endl << endl;
 }
 
 void User::changeBirthday(connection& C)
@@ -623,7 +665,7 @@ void User::changeBirthday(connection& C)
     W1.exec(sql);
     W1.commit();
 
-    cout << "Your birthday has been succesfully changed." << endl << endl;
+    cout << endl << "Your birthday has been succesfully changed." << endl << endl;
 }
 
 void Admin::loginAdmin(string db)
@@ -1020,18 +1062,27 @@ void Utility::updateAttr(connection& C, string attr)
     
     if (attr == "title")
     {
-        // Create SQL statement to get the tuple with the given title
-        sql = "SELECT * FROM movies WHERE title ='" + change + "';";
-
-        nontransaction N1(C); // Create a non-transactional object
-        result R1(N1.exec(sql)); // Get the result of the query
-        N1.commit();
-
-        if (R1.size() != 0) // If a tuple with the given title exists, let the admin know
+        int exists;
+        do
         {
-            cout << endl << "This title already exists. " << endl;
-            return;
-        }
+            // Create SQL statement to get the tuple with the given title
+            sql = "SELECT * FROM movies WHERE title ='" + change + "';";
+
+            nontransaction N1(C); // Create a non-transactional object
+            result R1(N1.exec(sql)); // Get the result of the query
+            N1.commit();
+
+            if (R1.size() != 0) // If a tuple with the given title exists, let the admin know
+            {
+                cout << endl << "This title already exists. Please enter a different title." << endl;
+                exists = 1;
+                cout << "Enter the new " + attr + ": ";
+                getline(cin, change);
+            }
+            else
+                exists = 0;
+
+        } while(exists);
     }
 
     if (attr == "qty" || attr == "price")
@@ -1319,11 +1370,34 @@ int Admin::updateAccountInfo(connection& C)
 int Admin::addNewAdmin(connection& C)
 {
     string email, password, first, last, sql, confirm;
-    int tries = 3;
+    int tries = 3, exists;
     bool valid;
 
     cout << "Enter the new administrator's e-mail: ";
     cin >> email;
+
+    do
+    {
+        cout << "Enter the new administrator's e-mail: ";
+        cin >> email;
+
+        sql = "SELECT Email FROM Admins WHERE Email = '" + email + "';";
+
+        nontransaction N(C); // Create a non-transactional object
+        result R(N.exec(sql)); // Get the result of the query
+        N.commit();
+
+        if (R.size() != 0)
+        {
+            cout << "There is already an account associated with this e-mail." << endl
+                 << "Please choose a different e-mail." << endl;
+            exists = 1;
+        }
+        else
+            exists = 0;
+
+    } while (exists);
+
     cout << "Enter the new administrators's password: ";
     cin >> password;
     cout << "Enter the new administrator's first name: ";
@@ -1387,15 +1461,39 @@ void Utility::changeEmail(connection& C, string view)
     // Create SQL statement to get the current email
     string sql = "SELECT Email FROM " + view + ";";
     string change;
-                    
+    int exists;        
+            
     nontransaction N1(C); // Create a non-transactional object
     result R(N1.exec(sql)); // Get the result of the query
     N1.commit();
     result::const_iterator c = R.begin(); 
                 
-    cout << "Your current e-mail is " << c[0].as<string>() << endl 
-         << "Enter your new e-mail: ";
-    cin >> change;
+    cout << "Your current e-mail is " << c[0].as<string>() << endl; 
+
+    do
+    {
+        cout << "Enter your new e-mail: ";
+        cin >> change;
+
+        if (view == "CustomerView")
+            sql = "SELECT Email FROM Customers WHERE Email = '" + change + "';";
+        else if (view == "AdminView")
+            sql = "SELECT Email FROM Admins WHERE Email = '" + change + "';";
+
+        nontransaction N1(C); // Create a non-transactional object
+        result R(N1.exec(sql)); // Get the result of the query
+        N1.commit();
+
+        if (R.size() != 0)
+        {
+            cout << "There is already an account associated with this e-mail." << endl
+                 << "Please choose a different e-mail." << endl;
+            exists = 1;
+        }
+        else
+            exists = 0;
+
+    } while (exists);
 
     // Create SQL statement to update the customer/admin's e-mail
     sql = "UPDATE " + view + " SET Email = '" + change + "';";
@@ -1404,7 +1502,7 @@ void Utility::changeEmail(connection& C, string view)
     W1.exec(sql);
     W1.commit();
 
-    cout << "Your e-mail has been succesfully changed!" << endl << endl;
+    cout << endl << "Your e-mail has been succesfully changed!" << endl << endl;
 }
 
 bool Utility::changePassword(connection& C, string view)
@@ -1464,7 +1562,7 @@ bool Utility::changePassword(connection& C, string view)
     W1.exec(sql);
     W1.commit();
 
-    cout << "Your password has been succesfully changed!" << endl << endl;
+    cout << endl << "Your password has been succesfully changed!" << endl << endl;
     return true;
 }
 
@@ -1492,5 +1590,5 @@ void Utility::changeName(connection& C, string view, string name)
     W1.exec(sql);
     W1.commit();
 
-    cout << "Your name has been succesfully changed!" << endl << endl;
+    cout << endl << "Your name has been succesfully changed!" << endl << endl;
 }

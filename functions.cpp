@@ -188,8 +188,8 @@ int functions::selectMovie(connection &C, int user)
                 <<endl <<"Synopsis: "<<res->at(select-1)["des"]  <<endl << endl;
                 if(user ==1){
                     cout << "Would you like to add this movie to your cart?"<<endl
-                        <<"1)Yes"<<endl
-                        <<"2)No" <<endl;
+                        <<"1) Yes"<<endl
+                        <<"2) No" <<endl;
                     cin >> option;
                     switch (option)
                     {
