@@ -83,6 +83,7 @@ int main()
                             "Email VARCHAR(50),"
                             "Password VARCHAR(20),"
                             "AName VARCHAR(50),"
+                            "DOB DATE,"
                             "PRIMARY KEY(AID));"
                             
                         "DROP USER IF EXISTS movie_guest;"
@@ -352,10 +353,10 @@ int main()
         W4.exec(insert);
         W4.commit();
 
-        insert = "INSERT INTO Admins(AID, Email, Password, AName)"
-                    "VALUES (1110, 'mikam@usf.edu', 'Admin1!', 'Mika Morrisson');"
-                "INSERT INTO Admins(AID, Email, Password, AName)"
-                    "VALUES (1111, 'justinr@usf.edu', 'Admin2!', 'Justin Rodney');";
+        insert = "INSERT INTO Admins(AID, Email, Password, AName, DOB)"
+                    "VALUES (1110, 'mikam@usf.edu', 'Admin1!', 'Mika Morrisson', '1998-02-27');"
+                "INSERT INTO Admins(AID, Email, Password, AName, DOB)"
+                    "VALUES (1111, 'justinr@usf.edu', 'Admin2!', 'Justin Rodney', '1998-02-27');";
         
         work W5(C); // Create a transactional object
         W5.exec(insert);

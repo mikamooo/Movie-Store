@@ -42,7 +42,7 @@ class Admin
         int addNewAdmin(connection&);
         void updateMovieMenu(connection&);
         void updateMovies(connection&);
-        void addMovies(connection&);
+        int addMovies(connection&);
         
 };
 
@@ -52,6 +52,7 @@ class Utility
         void changeEmail(connection&, string);
         bool changePassword(connection&, string);
         void changeName(connection&, string, string);
+        void changeBirthday(connection&, string);
         void updateAttr(connection&, string);
 };
 

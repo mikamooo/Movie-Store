@@ -450,8 +450,8 @@ int User::viewAccount(connection& C)
 void User::placeOrder(connection& C)
 {
     cout <<"Would you like to place an order?"<<endl
-            <<"1)Yes"<<endl
-            <<"2)No"<<endl;
+            <<"1) Yes"<<endl
+            <<"2) No"<<endl;
     int option;
     cin >>option;
     if(option!=1)
@@ -593,7 +593,7 @@ int User::updateAccountInfo(connection& C)
                 u.changeName(C, "CustomerView", "CName");
                 break;
             case 5:
-                changeBirthday(C);
+                u.changeBirthday(C, "CustomerView");
                 break;
             case 6:
                 return 0;
@@ -637,35 +637,6 @@ void User::changeAddress(connection& C)
     W1.commit();
 
     cout << endl << "Your address has been succesfully changed." << endl << endl;
-}
-
-void User::changeBirthday(connection& C)
-{
-    // Create SQL statement to get the customer's birthday
-    string sql = "SELECT DOB FROM CustomerView;";
-    string year, month, day;
-                    
-    nontransaction N1(C); // Create a non-transactional object
-    result R(N1.exec(sql)); // Get the result of the query
-    result::const_iterator c = R.begin(); 
-    N1.commit();
-                
-    cout << "Your birthday is " << c[0].as<string>() << endl
-         << "Enter your new birthday year (YYYY): ";
-    cin >> year;
-    cout << "Enter your new birthday month (MM): ";
-    cin >> month;
-    cout << "Enter your new birthday day (DD): ";
-    cin >> day;
-
-    // Create SQL statement to update the customer's birthday
-    sql = "UPDATE CustomerView SET DOB = '" + year + "-" + month + "-" + day + "';";
-
-    work W1(C); // Create a transactional object
-    W1.exec(sql);
-    W1.commit();
-
-    cout << endl << "Your birthday has been succesfully changed." << endl << endl;
 }
 
 void Admin::loginAdmin(string db)
@@ -745,7 +716,7 @@ void Admin::loginAdmin(string db)
     }
     else // Or let the admin know that they have successfully logged in.
     {
-        cout << "You have successfully logged in!" << endl;
+        cout << endl << "You have successfully logged in!" << endl << endl;
         adminMenu(C);
     }
 }
@@ -816,29 +787,29 @@ void Admin::updateMovieMenu(connection& C)
                 break;
             case 2:
             {
-                addMovies(C);
-
-                do
+                if (addMovies(C) != -1)
                 {
-                    cout << endl << "Would you like to add another movie?" << endl
-                    << "1) Yes" << endl << "2) No" << endl;
-                    cin >> add;
-
-                    switch (add)
+                    do
                     {
-                        case 1:
-                            addMovies(C);
-                            break;
-                        case 2:
-                            add = -1;
-                            break;
-                        default:
-                            cout << "Please select a valid option." << endl;
-                            break;
-                    }
+                        cout << endl << "Would you like to add another movie?" << endl
+                        << "1) Yes" << endl << "2) No" << endl;
+                        cin >> add;
 
-                } while (add != -1);
+                        switch (add)
+                        {
+                            case 1:
+                                addMovies(C);
+                                break;
+                            case 2:
+                                add = -1;
+                                break;
+                            default:
+                                cout << "Please select a valid option." << endl;
+                                break;
+                        }
 
+                    } while (add != -1);
+                }
                 break;
             }
             case 3:
@@ -866,7 +837,7 @@ void Admin::updateMovies(connection& C)
         cout << endl << "Please select an update option." << endl
             << "1) Update title" << endl
             << "2) Update genre" << endl
-            << "3) Update year" << endl
+            << "3) Update release date" << endl
             << "4) Update quantity" << endl
             << "5) Update price" << endl
             << "6) Update rating" << endl
@@ -942,7 +913,9 @@ void Utility::updateAttr(connection& C, string attr)
     N.commit();
     
     if (attr == "des")
-        cout << "The current " + attr + " of this movie is: " << endl << c[0].as<string>() << endl;
+        cout << "The current synopsis of this movie is: " << endl << c[0].as<string>() << endl << endl;
+    else if (attr == "year")
+        cout << "The current release date of this movie is: " << c[0].as<string>() << endl;
     else
         cout << "The current " + attr + " of this movie is: " << c[0].as<string>() << endl;
     
@@ -1054,6 +1027,11 @@ void Utility::updateAttr(connection& C, string attr)
 
         } while(option != -1);
     }
+    else if (attr == "des")
+    {
+        cout << "Enter the new synopsis: ";
+        getline(cin, change);
+    }
     else
     {
         cout << "Enter the new " + attr + ": ";
@@ -1063,6 +1041,7 @@ void Utility::updateAttr(connection& C, string attr)
     if (attr == "title")
     {
         int exists;
+        string option;
         do
         {
             // Create SQL statement to get the tuple with the given title
@@ -1074,10 +1053,26 @@ void Utility::updateAttr(connection& C, string attr)
 
             if (R1.size() != 0) // If a tuple with the given title exists, let the admin know
             {
-                cout << endl << "This title already exists. Please enter a different title." << endl;
-                exists = 1;
+                cout << endl << "The title '" + change + "' already exists." << endl 
+                << "Please enter a different title or return to the update menu." << endl
+                << "1) Enter a different title" << endl
+                << "2) Return to update options" << endl;
+                getline(cin, option);
+
+                if (option == "2")
+                    return;
+                
+                while (option != "1")
+                {
+                    cout << "Please select a valid option." << endl
+                         << "1) Enter a different title" << endl
+                        << "2) Return to update options" << endl;
+                    getline(cin, option);
+                }
+                
                 cout << "Enter the new " + attr + ": ";
                 getline(cin, change);
+                exists = 1;
             }
             else
                 exists = 0;
@@ -1097,7 +1092,7 @@ void Utility::updateAttr(connection& C, string attr)
     W1.commit();
 }
 
-void Admin::addMovies(connection& C)
+int Admin::addMovies(connection& C)
 {
     string title, genre, year, month, day, qty, price, rating, des, sql, select;
     int option = 0, new_mid;
@@ -1110,7 +1105,7 @@ void Admin::addMovies(connection& C)
         getline(cin, title);
 
         // Create SQL statement to get the tuple with the given title
-        sql = "SELECT * FROM movies WHERE title ilike'%" + title + "%';";
+        sql = "SELECT * FROM movies WHERE title = '" + title + "';";
 
         nontransaction N1(C); // Create a non-transactional object
         result R1(N1.exec(sql)); // Get the result of the query
@@ -1118,7 +1113,7 @@ void Admin::addMovies(connection& C)
 
         if (R1.size() != 0) // If a tuple with the given title exists, let the admin know
         {
-            cout << endl << "This title already exists. Please select an option to continue." << endl
+            cout << endl << "The title '" + title + "' already exists. Please select an option to continue." << endl
                 << "1) Add a new movie" << endl
                 << "2) Update an existing movie" << endl;
             getline(cin, select);
@@ -1126,7 +1121,7 @@ void Admin::addMovies(connection& C)
             if (stoi(select) == 2) // If the admin chooses to update instead, redirect them 
             {
                 updateMovies(C);
-                return;
+                return -1;
             }
         }
         else
@@ -1137,7 +1132,7 @@ void Admin::addMovies(connection& C)
     
     do // Get the genre of the movie
     {
-        cout << "Please select the genre for this movie." << endl
+        cout << endl << "Please select the genre for this movie." << endl
             << "1) Comedy" << endl
             << "2) Drama" << endl
             << "3) Horror" << endl
@@ -1259,6 +1254,8 @@ void Admin::addMovies(connection& C)
     work W1(C); // Create a transactional object
     W1.exec(sql);
     W1.commit();
+
+    return 0;
 }
 
 int Admin::viewAccount(connection& C)
@@ -1275,7 +1272,7 @@ int Admin::viewAccount(connection& C)
 
         // Create SQL statement to create a view for the admin's account info
         string sql = "DROP VIEW IF EXISTS AdminView CASCADE;"
-                    "CREATE VIEW AdminView AS SELECT Email, Password, AName FROM Admins WHERE AID = " 
+                    "CREATE VIEW AdminView AS SELECT Email, Password, AName, DOB FROM Admins WHERE AID = " 
                     + to_string(aid) + " ;";
 
         work W1(C); // Create a transactional object
@@ -1291,8 +1288,9 @@ int Admin::viewAccount(connection& C)
 
         for (result::const_iterator c = R.begin(); c != R.end(); c++) // Print the results
         {
-            cout << "Name: " << c[2].as<string>() << endl;
-            cout << "E-mail: " << c[0].as<string>() << endl << endl;
+            cout << "Name: " << c[2].as<string>() << endl
+                 << "E-mail: " << c[0].as<string>() << endl 
+                 << "Birthday: " << c[3].as<string>() << endl<< endl;
         }
 
         cout << "1) Return to admin menu" << endl // Prompt the admin to return to the admin menu or update their info
@@ -1316,7 +1314,6 @@ int Admin::viewAccount(connection& C)
     } while (option != -1);
 
     return 0;
-
 }
 
 int Admin::updateAccountInfo(connection& C)
@@ -1336,7 +1333,8 @@ int Admin::updateAccountInfo(connection& C)
             << "1) Change e-mail" << endl
             << "2) Change password" << endl
             << "3) Change name" << endl
-            << "4) Return to account info" << endl;
+            << "4) Change birthday" << endl
+            << "5) Return to account info" << endl;
             cin >> option;
 
         switch(option)
@@ -1356,6 +1354,9 @@ int Admin::updateAccountInfo(connection& C)
                 u.changeName(C, "AdminView", "AName");
                 break;
             case 4:
+                u.changeBirthday(C, "AdminView");
+                break;
+            case 5:
                 option = -1;
             default:
                 cout << "Please select a valid option." << endl;
@@ -1591,4 +1592,33 @@ void Utility::changeName(connection& C, string view, string name)
     W1.commit();
 
     cout << endl << "Your name has been succesfully changed!" << endl << endl;
+}
+
+void Utility::changeBirthday(connection& C, string view)
+{
+    // Create SQL statement to get the customer's birthday
+    string sql = "SELECT DOB FROM " + view + ";";
+    string year, month, day;
+                    
+    nontransaction N1(C); // Create a non-transactional object
+    result R(N1.exec(sql)); // Get the result of the query
+    result::const_iterator c = R.begin(); 
+    N1.commit();
+                
+    cout << "Your birthday is " << c[0].as<string>() << endl
+         << "Enter your new birthday year (YYYY): ";
+    cin >> year;
+    cout << "Enter your new birthday month (MM): ";
+    cin >> month;
+    cout << "Enter your new birthday day (DD): ";
+    cin >> day;
+
+    // Create SQL statement to update the customer's birthday
+    sql = "UPDATE " + view + " SET DOB = '" + year + "-" + month + "-" + day + "';";
+
+    work W1(C); // Create a transactional object
+    W1.exec(sql);
+    W1.commit();
+
+    cout << endl << "Your birthday has been succesfully changed." << endl << endl;
 }
