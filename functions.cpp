@@ -233,6 +233,7 @@ void functions::addToCart(connection &C, int cid, int num)
            string sql = "SELECT qty FROM cart WHERE cid = " +to_string(cid)+" AND OID =-1 AND " 
                         "mid ="+res->at(num-1)["mid"].as<string>() +";";   
            nontransaction N1(C); // Create a non-transactional object
+            
 
             result *R = new result(N1.exec(sql)); // Get the result of the query
             N1.commit();
@@ -242,11 +243,25 @@ void functions::addToCart(connection &C, int cid, int num)
                             << "Try checking out!"<<endl;
                             return;
                     }
+            int addQTY;
+            cout << "How many would you like to add to your cart?" <<endl;
+            cin >>addQTY;
+
+            if(addQTY>res->at(num-1)["qty"].as<int>())
+                {
+                    cout << "Sorry, we don't have enough in stock to place into your cart"<<endl;
+                    return;
+                }
+            if(R->size()>0)
+                if(R->at(0)["qty"].as<int>()+addQTY >=res->at(num-1)["qty"].as<int>())
+                    {cout << "Sorry, we don't have enough in stock to place into your cart"<<endl;
+                    return;}
+            
                 
 
             string insert = "INSERT INTO CART(CID, mid, qty)"
-                        "VALUES ("+to_string(cid) +',' +res->at(num-1)["mid"].as<string>()+",1)"
-                        "ON CONFLICT ON CONSTRAINT cart_pk DO UPDATE SET qty = CART.qty + 1;";
+                        "VALUES ("+to_string(cid) +',' +res->at(num-1)["mid"].as<string>()+","+to_string(addQTY)+")"
+                        "ON CONFLICT ON CONSTRAINT cart_pk DO UPDATE SET qty = CART.qty +" +to_string(addQTY)+";";
             work W(C); // Create a transactional object
             W.exec(insert);
             W.commit();

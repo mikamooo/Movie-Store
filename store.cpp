@@ -340,8 +340,8 @@ void User::viewOrders(connection& C)
 }
 
 void User::viewAllOrders(connection &C){
-    string sql = "SELECT title, qty2, (movies.price*cart2.qty2) as price,Received,Shipped,oid,address FROM movies NATURAL JOIN "
-    "(SELECT cid, mid, qty as qty2,Received,Shipped,OID,address FROM cart NATURAL JOIN orders "
+    string sql = "SELECT title, qty2, purchased,Received,Shipped,oid,address FROM movies NATURAL JOIN "
+    "(SELECT cid, mid, qty as qty2,Received,Shipped,OID,address,purchased FROM cart NATURAL JOIN orders "
     "WHERE cid = " +to_string(cid)+" AND OID IS NOT NULL) as cart2 " 
     "ORDER BY OID;";   
     nontransaction N1(C); // Create a non-transactional object
@@ -373,7 +373,7 @@ void User::viewAllOrders(connection &C){
         if(temp.length()>40)
             temp= temp.substr(0,34) + "...";
 
-        cout << setw(40) << left << temp << setw(5) << qty << setw(12)<< "$"+ to_string(row["price"]) << endl;
+        cout << setw(40) << left << temp << setw(5) << qty << setw(12)<< "$"+ to_string(row["purchased"]) << endl;
     }
     cout <<endl;
     delete R;

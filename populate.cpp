@@ -73,6 +73,7 @@ int main()
                             "MID INTEGER,"
                             "Qty INTEGER,"
                             "OID INTEGER DEFAULT -1,"
+                            "Purchased NUMERIC(4,2) DEFAULT NULL CHECK(Purchased >= 0),"
                             "CONSTRAINT cart_pk PRIMARY KEY(CID, MID,OID),"
                             "CONSTRAINT cart_fk1 FOREIGN KEY(CID) REFERENCES Customers,"
                             "CONSTRAINT cart_fk2 FOREIGN KEY(MID) REFERENCES Movies);"
@@ -367,6 +368,14 @@ int main()
                         " UPDATE movies SET qty= movies.qty - lastOrd.qty FROM"
                         "(SELECT mid, qty, cid FROM (SELECT mid,qty,cid FROM cart WHERE oid = -1) as cart2 NATURAL JOIN"
                         " (SELECT * FROM orders ORDER BY oid DESC LIMIT 1) as t) AS lastOrd WHERE movies.mid =lastOrd.mid;"
+
+                        " UPDATE cart SET purchased = cart.qty*lastOrd.Price FROM "
+                        "(SELECT mid,cid,oid,price FROM (SELECT mid,cid,price FROM cart  "
+                        "NATURAL JOIN (SELECT mid, price FROM movies) as movies "
+                        "WHERE oid = -1) as cart2 NATURAL JOIN " 
+                        "(SELECT * FROM orders ORDER BY oid DESC LIMIT 1) as t) AS lastOrd "
+                        "WHERE cart.cid =lastOrd.cid AND cart.oid = -1;"
+
                         " UPDATE cart SET OID=lastOrd.oid FROM (SELECT * FROM orders ORDER BY oid DESC LIMIT 1) as lastOrd WHERE"
                         " cart.cid=lastOrd.cid AND cart.oid =-1;"
                         "RETURN NULL;"
