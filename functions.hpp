@@ -24,6 +24,7 @@ void displayAllMoviesByGenre(connection &C, string genre);
 void genrePrompt(connection &C);
 void addToCart(connection &C, int cid, int num);
 int viewCart(connection &C, int cid);
+void removeFromCart(connection &C, int cid);
 };
 
 #endif

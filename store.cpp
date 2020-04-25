@@ -237,7 +237,17 @@ void User::userMenu(connection& C)
             case 3:{
                 functions function;
                 if(function.viewCart(C, cid))
-                    placeOrder(C);
+                    {cout <<"1)Place an order"<<endl
+                            <<"2)Remove an item from cart"<<endl
+                            <<"3)Return to main menu"<<endl;
+                    cin >>option;
+                    if(option==1)
+                        placeOrder(C);
+                    else if(option==2)
+                        function.removeFromCart(C,cid);
+
+
+                    }
                 else
                 {
                     int opt;
@@ -452,13 +462,14 @@ int User::viewAccount(connection& C)
 
 void User::placeOrder(connection& C)
 {
-    cout <<"Would you like to place an order?"<<endl
-            <<"1) Yes"<<endl
-            <<"2) No"<<endl;
+    // cout <<"Would you like to place an order?"<<endl
+    //         <<"1) Yes"<<endl
+    //         <<"2) No"<<endl;
+    // int option;
+    // cin >>option;
+    // if(option!=1)
+    //     return;
     int option;
-    cin >>option;
-    if(option!=1)
-        return;
     string sql = "SELECT * FROM movies NATURAL JOIN(SELECT mid,cid,qty as qty2 FROM cart WHERE oid = -1 AND cid" 
                 "= "+to_string(cid)+") as cart WHERE cart.qty2>movies.qty;";
     nontransaction N0(C); // Create a non-transactional object

@@ -223,12 +223,18 @@ int functions::selectMovie(connection &C, int user)
 void functions::addToCart(connection &C, int cid, int num)
 {
         if(res ==nullptr || num <1 || num >res->size())//if there is no
-                    {cout << "Sorry! We experienced some technical difficulties"<<endl;
-            return;
-            }
+                    {cout << "Sorry! We experienced some technical difficulties"<<endl
+                    <<"1)Return to main menu" <<endl;
+                    int option;
+                    cin >>option;
+                    return;
+                    }
             if(res->at(num-1)["qty"].as<int>()<=0)
-                {cout << "Sorry! We dont have that item in stock."<<endl;
-                return;
+                {cout << "Sorry! We dont have that item in stock."<<endl
+                <<"1)Return to main menu" <<endl;
+                    int option;
+                    cin >>option;
+                    return;
                 }
            string sql = "SELECT qty FROM cart WHERE cid = " +to_string(cid)+" AND OID =-1 AND " 
                         "mid ="+res->at(num-1)["mid"].as<string>() +";";   
@@ -240,8 +246,11 @@ void functions::addToCart(connection &C, int cid, int num)
             if(R->size()>0)
                 if(R->at(0)["qty"].as<int>() >=res->at(num-1)["qty"].as<int>())
                     {cout << "It looks like you already have all these in your cart!"<<endl
-                            << "Try checking out!"<<endl;
-                            return;
+                            << "Try checking out!\n"<<endl
+                            <<"1)Return to main menu" <<endl;
+                    int option;
+                    cin >>option;
+                    return;
                     }
             int addQTY;
             cout << "How many would you like to add to your cart?" <<endl;
@@ -249,12 +258,18 @@ void functions::addToCart(connection &C, int cid, int num)
 
             if(addQTY>res->at(num-1)["qty"].as<int>())
                 {
-                    cout << "Sorry, we don't have enough in stock to place into your cart"<<endl;
+                    cout << "Sorry, we don't have enough in stock to place into your cart"<<endl
+                        <<"1)Return to main menu" <<endl;
+                    int option;
+                    cin >>option;
                     return;
                 }
             if(R->size()>0)
                 if(R->at(0)["qty"].as<int>()+addQTY >=res->at(num-1)["qty"].as<int>())
-                    {cout << "Sorry, we don't have enough in stock to place into your cart"<<endl;
+                    {cout << "Sorry, we don't have enough in stock to place into your cart"<<endl
+                    <<"1)Return to main menu" <<endl;
+                    int option;
+                    cin >>option;
                     return;}
             
                 
@@ -277,7 +292,7 @@ int functions::viewCart(connection &C, int CID){
          << "*                                                                     *" << endl
          << "***********************************************************************" << endl << endl;
 
-string sql = "SELECT title, qty2, (movies.price*cart2.qty2) as price FROM movies NATURAL JOIN "
+string sql = "SELECT title,mid, qty2, (movies.price*cart2.qty2) as price FROM movies NATURAL JOIN "
 "(SELECT cid, mid, qty as qty2 FROM cart WHERE cid = " +to_string(CID)+" AND OID =-1) as cart2;";   
 nontransaction N1(C); // Create a non-transactional object
 
@@ -320,6 +335,51 @@ if(i>1)
 }
 
 return 0;
+}
+
+void functions::removeFromCart(connection &C, int cid)
+{int num, qty;
+
+do
+{   
+    cout<<"Enter the number of the movie you want to remove(0 to quit): "<<endl;
+    cin>> num; if(num==0)return;
+    cout<<"Enter how many you would like to remove: " <<endl;
+    cin >>qty;
+    if(qty<res->at(num-1)["qty2"].as<int>()){
+        string insert = "UPDATE cart set qty=cart.qty-"+to_string(qty)
+                +" WHERE cid="+to_string(cid)+" AND mid=" +res->at(num-1)["mid"].as<string>() +" AND OID=-1;";
+            work W(C); // Create a transactional object
+            W.exec(insert);
+            W.commit();
+    }
+    else{
+        string insert = "DELETE FROM cart "
+                "WHERE cid="+to_string(cid)+" AND mid=" +res->at(num-1)["mid"].as<string>() +" AND OID=-1;";
+            work W(C); // Create a transactional object
+            W.exec(insert);
+            W.commit();
+    }
+    
+    num = viewCart(C, cid);
+    cout <<"Your cart has been updated!"<<endl;
+    if(num!=0)
+    {
+        cout <<"Would you like to remove another movie?"<<endl
+            <<"1)Yes" <<endl
+            <<"2)No"<<endl;
+            cin>>num;
+            if(num==2)
+                return;
+
+    }
+    else
+    {cout<<"Your cart is empty... returning to main menu"<<endl;
+    }
+    
+
+}while(num!=0);
+return;
 }
 
 void functions::displayByPrice(connection &C)
