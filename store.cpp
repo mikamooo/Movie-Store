@@ -352,7 +352,7 @@ void User::viewOrders(connection& C)
 void User::viewAllOrders(connection &C){
     string sql = "SELECT title, qty2, purchased,Received,Shipped,oid,address FROM movies NATURAL JOIN "
     "(SELECT cid, mid, qty as qty2,Received,Shipped,OID,address,purchased FROM cart NATURAL JOIN orders "
-    "WHERE cid = " +to_string(cid)+" AND OID IS NOT NULL) as cart2 " 
+    "WHERE cid = " +to_string(cid)+") as cart2 " 
     "ORDER BY OID;";   
     nontransaction N1(C); // Create a non-transactional object
 
