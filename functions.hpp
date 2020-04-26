@@ -14,7 +14,6 @@ result *res; // this holds the result of the querry to be accessed by users
 functions();
 ~functions();
 int browseMovies(connection &C);
-void browseMoviesUser(connection &C);
 int selectMovie(connection &C, int user =0);
 int selectAdmin(connection&C);
 void displayAllMovies(connection &C);
