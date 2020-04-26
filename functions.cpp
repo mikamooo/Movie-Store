@@ -362,12 +362,12 @@ do
     }
     
     num = viewCart(C, cid);
-    cout <<"Your cart has been updated!"<<endl;
+    cout <<"Your cart has been updated!"<<endl << endl;
     if(num!=0)
     {
         cout <<"Would you like to remove another movie?"<<endl
-            <<"1)Yes" <<endl
-            <<"2)No"<<endl;
+            <<"1) Yes" <<endl
+            <<"2) No"<<endl;
             cin>>num;
             if(num==2)
                 return;

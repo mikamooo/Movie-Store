@@ -237,9 +237,9 @@ void User::userMenu(connection& C)
             case 3:{
                 functions function;
                 if(function.viewCart(C, cid))
-                    {cout <<"1)Place an order"<<endl
-                            <<"2)Remove an item from cart"<<endl
-                            <<"3)Return to main menu"<<endl;
+                    {cout <<"1) Place an order"<<endl
+                            <<"2) Remove an item from cart"<<endl
+                            <<"3) Return to main menu"<<endl;
                     cin >>option;
                     if(option==1)
                         placeOrder(C);
@@ -462,13 +462,6 @@ int User::viewAccount(connection& C)
 
 void User::placeOrder(connection& C)
 {
-    // cout <<"Would you like to place an order?"<<endl
-    //         <<"1) Yes"<<endl
-    //         <<"2) No"<<endl;
-    // int option;
-    // cin >>option;
-    // if(option!=1)
-    //     return;
     int option;
     string sql = "SELECT * FROM movies NATURAL JOIN(SELECT mid,cid,qty as qty2 FROM cart WHERE oid = -1 AND cid" 
                 "= "+to_string(cid)+") as cart WHERE cart.qty2>movies.qty;";
@@ -488,7 +481,7 @@ void User::placeOrder(connection& C)
         
         cout<<"You have more copies of "<<row["title"]<<" in your cart than we have in stock.\n"
         "Would you like to purchase " <<row["qty"] <<" copies or remove them from your cart?"
-        "\n1)Purchase " <<row["qty"] <<" copies"<<endl
+        "\n1) Purchase " <<row["qty"] <<" copies"<<endl
         <<"2) Remove all from cart"<<endl;
         cin>>option;
         switch (option)
@@ -1386,9 +1379,28 @@ int Admin::updateAccountInfo(connection& C)
 
 int Admin::addNewAdmin(connection& C)
 {
-    string email, password, first, last, sql, confirm;
+    string email, password, first, last, year, month, day, sql, confirm;
     int tries = 3, exists;
     bool valid;
+
+    // Create SQL statement to display the current admins
+    sql = "SELECT Aname FROM Admins;";
+    cout << "The current administators are: ";
+
+    nontransaction N(C); // Create a non-transactional object
+    result R(N.exec(sql)); // Get the result of the query
+    N.commit();
+    result::const_iterator c = R.begin();
+
+    for (result::const_iterator c = R.begin(); c != R.end(); c++) // Print the results
+    {
+        if (c == R.end() - 1)
+            cout << c[0].as<string>();
+        else
+            cout << c[0].as<string>() << ", ";
+
+    }
+    cout << endl << endl;
 
     do
     {
@@ -1398,9 +1410,9 @@ int Admin::addNewAdmin(connection& C)
         // Create SQL statement to check if the email belongs to another admin
         sql = "SELECT Email FROM Admins WHERE Email = '" + email + "';";
 
-        nontransaction N(C); // Create a non-transactional object
-        result R(N.exec(sql)); // Get the result of the query
-        N.commit();
+        nontransaction N1(C); // Create a non-transactional object
+        result R(N1.exec(sql)); // Get the result of the query
+        N1.commit();
 
         if (R.size() != 0)
         {
@@ -1419,6 +1431,12 @@ int Admin::addNewAdmin(connection& C)
     cin >> first;
     cout << "Enter the new administrator's last name: ";
     cin >> last;
+    cout << "Enter the new administrator's birthday year (YYYY): ";
+    cin >> year;
+    cout << "Enter the new administrator's birthday month (MM): ";
+    cin >> month;
+    cout << "Enter the new administrator's birthday day (DD): ";
+    cin >> day;
     
     do
     {
@@ -1431,9 +1449,9 @@ int Admin::addNewAdmin(connection& C)
         // Create SQL statement to verify the admin's password
         sql = "SELECT AID FROM Admins WHERE AID = " + to_string(aid) + " AND Password = '" + confirm + "';";
 
-        nontransaction N1(C); // Create a non-transactional object
-        result R(N1.exec(sql)); // Get the result of the query
-        N1.commit();
+        nontransaction N2(C); // Create a non-transactional object
+        result R(N2.exec(sql)); // Get the result of the query
+        N2.commit();
 
         if (R.size() == 0) // Check that a tuple was returned
         {
@@ -1455,14 +1473,15 @@ int Admin::addNewAdmin(connection& C)
     // Create SQL statement to get the largest AID
     sql = "SELECT AID FROM Admins ORDER BY AID DESC LIMIT 1;";
 
-    nontransaction N2(C); // Create a non-transactional object
-    result R(N2.exec(sql)); // Get the result of the query
-    N2.commit();
+    nontransaction N3(C); // Create a non-transactional object
+    result R1(N3.exec(sql)); // Get the result of the query
+    N3.commit();
 
-    int new_aid = R.at(0)["aid"].as<int>() + 1; // The new AID is now the AID after the largest AID
+    int new_aid = R1.at(0)["aid"].as<int>() + 1; // The new AID is now the AID after the largest AID
 
-    sql = "INSERT INTO ADMINS (AID, Email, Password, AName)"
-            "VALUES (" + to_string(new_aid) +  ", '" + email + "', '" + password + "', '" + first + " " + last + "');";
+    sql = "INSERT INTO ADMINS (AID, Email, Password, AName, DOB)"
+            "VALUES (" + to_string(new_aid) +  ", '" + email + "', '" + password + "', '" + first + " " + last + "', '"
+            + year + "-" + month + "-" + day + "');";
     
     work W1(C); // Create a transactional object
     W1.exec(sql);
