@@ -143,7 +143,7 @@ int main()
                         "VALUES (111, 'bryanl0we@live.com', 'sG@!mq1Na4x*', 'Bryan Lowe', '2015-11-30'," 
                                 "'4031 Pine St Seattle, WA 98101', '2003-05-08');"
                         "INSERT INTO CUSTOMERS(CID, Email, Password, CName, Created, Address, DOB)"
-                        "VALUES (112, 'ktjohnsone@usf.edu', 'p@$$w0rd!', 'Katie Johnson', '2017-09-25'," 
+                        "VALUES (112, 'ktjohnson@usf.edu', 'p@$$w0rd!', 'Katie Johnson', '2017-09-25'," 
                                 "'526 Grace St Tampa, FL 33201', '1999-12-31');"
                         "INSERT INTO CUSTOMERS(CID, Email, Password, CName, Created, Address, DOB)"
                         "VALUES (113, 'chloeXlynnXr@gmail.com', 'PtvSwsBmth!', 'Chloe Rhodes', '2019-10-07'," 
@@ -356,12 +356,56 @@ int main()
 
         insert = "INSERT INTO Admins(AID, Email, Password, AName, DOB)"
                     "VALUES (1110, 'mikam@usf.edu', 'Admin1!', 'Mika Morrisson', '1998-02-27');"
-                "INSERT INTO Admins(AID, Email, Password, AName, DOB)"
+                 "INSERT INTO Admins(AID, Email, Password, AName, DOB)"
                     "VALUES (1111, 'justinr@usf.edu', 'Admin2!', 'Justin Rodney', '1998-02-27');";
         
         work W5(C); // Create a transactional object
         W5.exec(insert);
         W5.commit();
+
+        insert = "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(107, 1004, 11001, 1, 14.96);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(105, 1010, 11002, 1, 10.01);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(105, 1016, 11002, 1, 19.99);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(105, 1021, 11003, 1, 9.99);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(106, 1020, 11004, 1, 9.50);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(106, 1016, 11004, 1, 19.99);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(108, 1020, 11005, 1, 9.50);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(105, 1024, 11006, 1, 24.99);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(109, 1020, 11007, 1, 9.50);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(109, 1008, 11007, 1, 12.77);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(109, 1017, 11008, 1, 9.99);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(108, 1025, 11009, 1, 14.97);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(108, 1011, 11010, 1, 19.07);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(105, 1026, 11011, 1, 17.96);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(110, 1021, 11012, 1, 9.99);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(110, 1004, 11012, 1, 14.96);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(114, 1005, 11013, 1, 10.80);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(114, 1007, 11013, 1, 8.39);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(110, 1015, 11014, 1, 15.99);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(111, 1018, 11015, 1, 15.99);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(111, 1028, 11015, 1, 10.97);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(111, 1013, 11015, 1, 12.99);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(111, 1026, 11016, 1, 17.96);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(114, 1026, 11017, 1, 17.96);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(111, 1011, 11018, 1, 19.07);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(112, 1030, 11019, 1, 15.99);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(112, 1028, 11019, 1, 10.15);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(115, 1012, 11020, 1, 15.99);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(104, 1031, 11021, 1, 14.96);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(104, 1032, 11021, 1, 14.16);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(101, 1030, 11022, 1, 14.16);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(101, 1027, 11022, 1, 6.92);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(101, 1023, 11022, 2, 5.99);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(102, 1033, 11023, 1, 14.99);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(102, 1034, 11023, 1, 11.99);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(102, 1019, 11024, 1, 14.99);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(102, 1014, 11024, 1, 14.99);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(113, 1014, 11025, 1, 14.99);"
+                 "INSERT INTO Cart(CID, MID, OID, Qty, Purchased) VALUES(113, 1021, 11025, 1, 9.99);";
+
+        work W6(C); // Create a transactional object
+        W6.exec(insert);
+        W6.commit();
 
         insert = "CREATE OR REPLACE FUNCTION updateMovCart() RETURNS TRIGGER AS $$"
                     "BEGIN"
@@ -385,9 +429,9 @@ int main()
                     " AFTER INSERT ON orders"
                     " EXECUTE PROCEDURE updateMovCart();";
         
-        work W6(C); // Create a transactional object
-        W6.exec(insert);
-        W6.commit();
+        work W7(C); // Create a transactional object
+        W7.exec(insert);
+        W7.commit();
 
         C.disconnect(); // Disconnect from the database
 
