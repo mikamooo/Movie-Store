@@ -19,7 +19,6 @@ class User
     public:
         void loginPage(string); 
         void userMenu(connection&);
-        void checkOut();
         void placeOrder(connection&);
         void viewOrders(connection&);
         void viewAllOrders(connection&);
