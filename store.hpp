@@ -26,7 +26,6 @@ class User
         int viewAccount(connection&);
         int updateAccountInfo(connection&);
         void changeAddress(connection&);
-        void changeBirthday(connection&);
 };
 
 class Admin
