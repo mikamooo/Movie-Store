@@ -194,7 +194,7 @@ void User::loginPage(string db)
 
     if (attempts) // Let the customer know they ran out of attempts and exit
     {
-        cout << "Too many invalid login attempts. You will be disconnected." << endl;
+        cout << "Too many invalid login attempts." << endl;
         C.disconnect();
         return;
     }
@@ -717,7 +717,7 @@ void Admin::loginAdmin(string db)
 
     if (attempts) // Let the admin know they ran out of attempts and exit
     {
-        cout << "Too many invalid login attempts. You will be disconnected." << endl;
+        cout << "Too many invalid login attempts." << endl;
         C.disconnect();
         return;
     }
@@ -1466,7 +1466,7 @@ int Admin::addNewAdmin(connection& C)
                 
     if (tries == 0 && valid == false) // If the customer/admin used up all their attempts, disconnect
     {
-        cout << "Too many invalid login attempts. You will be disconnected." << endl;       
+        cout << "Too many invalid attempts. " << endl;       
         return -1;
     }
     cout << endl << "New administator successfully added!" << endl << endl;
@@ -1573,7 +1573,7 @@ bool Utility::changePassword(connection& C, string view)
                 
     if (tries == 0 && valid == false) // If the customer/admin used up all their attempts, disconnect
     {
-        cout << "Too many invalid login attempts. You will be disconnected." << endl;       
+        cout << "Too many invalid attempts." << endl;       
         return false;
     }
 
