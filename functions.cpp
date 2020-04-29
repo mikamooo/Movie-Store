@@ -223,15 +223,15 @@ int functions::selectMovie(connection &C, int user)
 void functions::addToCart(connection &C, int cid, int num)
 {
         if(res ==nullptr || num <1 || num >res->size())//if there is no
-                    {cout << "Sorry! We experienced some technical difficulties"<<endl
-                    <<"1)Return to main menu" <<endl;
+                    {cout << "Sorry! We experienced some technical difficulties"<<endl << endl
+                    <<"1) Return to user menu" <<endl;
                     int option;
                     cin >>option;
                     return;
                     }
             if(res->at(num-1)["qty"].as<int>()<=0)
-                {cout << "Sorry! We dont have that item in stock."<<endl
-                <<"1)Return to main menu" <<endl;
+                {cout << "Sorry! We dont have that item in stock."<<endl << endl
+                <<"1) Return to user menu" <<endl;
                     int option;
                     cin >>option;
                     return;
@@ -246,8 +246,8 @@ void functions::addToCart(connection &C, int cid, int num)
             if(R->size()>0)
                 if(R->at(0)["qty"].as<int>() >=res->at(num-1)["qty"].as<int>())
                     {cout << "It looks like you already have all these in your cart!"<<endl
-                            << "Try checking out!\n"<<endl
-                            <<"1)Return to main menu" <<endl;
+                            << "Try checking out!"<<endl << endl
+                            <<"1) Return to user menu" <<endl;
                     int option;
                     cin >>option;
                     return;
@@ -258,16 +258,16 @@ void functions::addToCart(connection &C, int cid, int num)
 
             if(addQTY>res->at(num-1)["qty"].as<int>())
                 {
-                    cout << "Sorry, we don't have enough in stock to place into your cart"<<endl
-                        <<"1)Return to main menu" <<endl;
+                    cout << "Sorry, we don't have enough in stock to place into your cart"<<endl << endl
+                        <<"1) Return to user menu" <<endl;
                     int option;
                     cin >>option;
                     return;
                 }
             if(R->size()>0)
                 if(R->at(0)["qty"].as<int>()+addQTY >=res->at(num-1)["qty"].as<int>())
-                    {cout << "Sorry, we don't have enough in stock to place into your cart"<<endl
-                    <<"1)Return to main menu" <<endl;
+                    {cout << "Sorry, we don't have enough in stock to place into your cart"<<endl << endl
+                    <<"1) Return to user menu" <<endl;
                     int option;
                     cin >>option;
                     return;}
@@ -374,7 +374,7 @@ do
 
     }
     else
-    {cout<<"Your cart is empty... returning to main menu"<<endl;
+    {cout<<"Your cart is empty... returning to user menu"<<endl;
     }
     
 

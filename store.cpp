@@ -239,7 +239,7 @@ void User::userMenu(connection& C)
                 if(function.viewCart(C, cid))
                     {cout <<"1) Place an order"<<endl
                             <<"2) Remove an item from cart"<<endl
-                            <<"3) Return to main menu"<<endl;
+                            <<"3) Return to user menu"<<endl;
                     cin >>option;
                     if(option==1)
                         placeOrder(C);
